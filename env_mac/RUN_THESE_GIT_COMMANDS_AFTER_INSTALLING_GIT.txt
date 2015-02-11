@@ -1,0 +1,3 @@
+ 501  git config --global core.editor "subl -n -w"
+ 502  git config --global push.default upstream
+ 503  git config --global merge.conflictstyle diff3

@@ -1,0 +1,63 @@
+
+# FSL Setup
+FSLDIR=/usr/local/fsl
+PATH=${FSLDIR}/bin:${PATH}
+export FSLDIR PATH
+source ${FSLDIR}/etc/fslconf/fsl.sh
+
+# FREESURFER Setup
+export FREESURFER_HOME=/Applications/freesurfer
+source $FREESURFER_HOME/SetUpFreeSurfer.sh
+
+# HCP Pipelines Setup
+export HCPPIPEDIR=/Applications/Pipelines-3.4.0
+export PATH=$PATH:$HCPPIPEDIR
+echo "HCPPIPEDIR        $HCPPIPEDIR"
+source $HCPPIPEDIR/SetUpHCPPipeline_stone.sh
+
+# WB_bin Setup
+export HCBDIR=/Applications/workbench/bin_macosx64
+export PATH=${PATH}:${HCBDIR}
+echo "HCBDIR            $HCBDIR"
+
+# FIX Setup
+FSL_FIXDIR=/usr/local/fix
+PATH=${FSL_FIXDIR}:${PATH}
+export FSL_FIXDIR PATH
+echo "FSL_FIXDIR        $FSL_FIXDIR"
+
+# Condor Setup
+CONDORDIR=/Applications/condor-8.3.2
+source ${CONDORDIR}/condor.sh
+echo "CONDORDIR         $CONDORDIR"
+export FSLPARALLEL=condor
+
+# Shortcuts
+alias ll="ls -lhtr"
+
+# MATLAB complier env settings
+DYLD_LIBRARY_PATH=/Applications/MATLAB/MATLAB_Compiler_Runtime/v717/runtime/maci64:/Applications/MATLAB/MATLAB_Compiler_Runtime/v717/sys/os/maci64:/Applications/MATLAB/MATLAB_Compiler_Runtime/v717/bin/maci64:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries
+XAPPLRESDIR=/Applications/MATLAB/MATLAB_Compiler_Runtime/v717/X11/app-defaults
+
+## Git Settings
+	# Enable tab completion
+	source ~/git-completion.bash
+
+	# colors!
+	green="\[\033[0;32m\]"
+	blue="\[\033[0;34m\]"
+	purple="\[\033[0;35m\]"
+	reset="\[\033[0m\]"
+
+	# Change command prompt
+	source ~/git-prompt.sh
+	export GIT_PS1_SHOWDIRTYSTATE=1
+	# '\u' adds the name of the current user to the prompt
+	# '\$(__git_ps1)' adds git-related stuff
+	# '\W' adds the name of the current directory
+	export PS1="$purple\u$green\$(__git_ps1)$blue \W $ $reset"
+
+# My Settings
+export CLICOLOR=1
+export ALEXTOOLBOX=/Applications/toolbox
+export PATH=${PATH}:${ALEXTOOLBOX}
