@@ -23,7 +23,7 @@ source $HCPPIPEDIR/global/scripts/opts.shlib # Command line option functions
 
 show_usage() {
     echo "For now this just makes a sub-dir and creates all of the HCP .spec file contents from the FreeSurfer output"
-    echo "needs three inputs in the style of: --path=/blah/blah/ --subject=99-999-999 --source=/blah/blah/T1w.nii.gz"
+    echo "needs two inputs in the style of: --path=/blah/blah/ --subject=99-999-999"
     exit 1
 }
 
@@ -45,7 +45,6 @@ log_Msg "Parsing Command Line Options"
 # Input Variables
 StudyFolder=`opts_GetOpt1 "--path" $@`
 Subject=`opts_GetOpt1 "--subject" $@`
-InputVolume=`opts_GetOpt1 "--source" $@` # The original volume used to run freesurfer with
 
 FreeSurferFolder="$StudyFolder"/"$Subject"
 
@@ -83,10 +82,19 @@ for Image in wmparc aparc.a2009s+aseg aparc+aseg ; do
   fi
 done
 
-#Add volume files to spec files
-fslreorient2std "$InputVolume" "$InputVolume"
-${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject".native.wb.spec INVALID "$InputVolume"
-${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject"."$HighResMesh"k_fs_LR.wb.spec INVALID "$InputVolume"
+#Add Anatomical Volumes
+for Image in rawavg T1 ; do
+  if [ -e "$FreeSurferFolder"/mri/"$Image".mgz ] ; then
+    mri_convert -ot nii "$FreeSurferFolder"/mri/"$Image".mgz "$HCPFolder"/"$Image".nii.gz
+    fslreorient2std "$HCPFolder"/"$Image".nii.gz "$HCPFolder"/"$Image".nii.gz
+    pushd "$HCPFolder"
+    	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject".native.wb.spec INVALID ./"$Image".nii.gz
+    	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject"."$HighResMesh"k_fs_LR.wb.spec INVALID ./"$Image".nii.gz
+    popd "$HCPFolder"/fsaverage_LR"$LowResMesh"k
+    	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec INVALID ../"$Image".nii.gz
+    pushd 
+  fi
+done
 
 #Loop through left and right hemispheres
 for Hemisphere in L R ; do
@@ -265,7 +273,6 @@ for Hemisphere in L R ; do
   done
 done
 
-${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec INVALID "$InputVolume"
 
 
 
