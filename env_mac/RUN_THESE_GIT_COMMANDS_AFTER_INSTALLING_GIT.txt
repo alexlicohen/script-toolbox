@@ -1,3 +1,5 @@
- 501  git config --global core.editor "subl -n -w"
- 502  git config --global push.default upstream
- 503  git config --global merge.conflictstyle diff3
+ git config --global core.editor "subl -n -w"
+ git config --global color.ui auto
+ git config --global push.default upstream
+ git config --global merge.conflictstyle diff3
+ git config --global user.email alexcohen@gmail.com
