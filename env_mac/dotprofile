@@ -40,6 +40,9 @@ DYLD_LIBRARY_PATH=/Applications/MATLAB/MATLAB_Compiler_Runtime/v717/runtime/maci
 XAPPLRESDIR=/Applications/MATLAB/MATLAB_Compiler_Runtime/v717/X11/app-defaults
 
 ## Git Settings
+	GITDIR=/usr/local/git/bin
+	PATH=${GITDIR}:${PATH}
+
 	# Enable tab completion
 	source ~/git-completion.bash
 
@@ -59,5 +62,6 @@ XAPPLRESDIR=/Applications/MATLAB/MATLAB_Compiler_Runtime/v717/X11/app-defaults
 
 # My Settings
 export CLICOLOR=1
+alias grep='grep --color'
 export ALEXTOOLBOX=/Applications/toolbox
 export PATH=${PATH}:${ALEXTOOLBOX}
