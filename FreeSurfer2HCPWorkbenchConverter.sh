@@ -6,7 +6,7 @@ set -e
 #  installed versions of: FSL (version 5.0.6), FreeSurfer (version 5.3.0-HCP), wb_command
 #  environment: FSLDIR , FREESURFER_HOME , HCPPIPEDIR , CARET7DIR
 
-# Author: Alex Cohen, adapted from HCP Pipelines code, last edit 01/21/15
+# Author: Alex Cohen, adapted from HCP Pipelines code, cloned at commit b8ea1db
 
 # --------------------------------------------------------------------------------
 #  Load Function Libraries
@@ -22,8 +22,11 @@ source $HCPPIPEDIR/global/scripts/opts.shlib # Command line option functions
 # --------------------------------------------------------------------------------
 
 show_usage() {
-    echo "For now this just makes a sub-dir and creates all of the HCP .spec file contents from the FreeSurfer output"
-    echo "needs two inputs in the style of: --path=/blah/blah/ --subject=99-999-999"
+    echo "This makes a subdir /hcp and creates wb_view .spec files from the FS output"
+    echo "Needs two inputs in the style of: --path=/blah/blah/blah --subject=fc_12345"
+    echo "where this path is equivalent to SUBJECTS_DIR. Adds rawavg and T1 to .specs"
+    echo "NOTE: all surfaces are currently alinged with the T1.mgz, per FS convention"
+    echo "The plan will be to add a switch to generate surfaces in T1 or rawavg space"
     exit 1
 }
 
@@ -60,6 +63,16 @@ GrayordinatesSpaceDIR="${HCPPIPEDIR_Templates}/91282_Greyordinates"
 # Make output folder
 if [ ! -e "$HCPFolder" ] ; then
   mkdir -p "$HCPFolder"
+else
+  echo "*******"
+  echo "WARNING: The hcp sub-directory already exists, are you sure you want to re-run this script?"
+  echo "*******"
+  read -p "(y or n): " -n 1 -r REPLY
+  echo ""
+  if [[ ! $REPLY =~ ^[Yy]$ ]]
+  then
+      exit 1
+  fi
 fi
 
 
