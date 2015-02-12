@@ -90,9 +90,7 @@ for Image in rawavg T1 ; do
     pushd "$HCPFolder"
     	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject".native.wb.spec INVALID ./"$Image".nii.gz
     	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject"."$HighResMesh"k_fs_LR.wb.spec INVALID ./"$Image".nii.gz
-    popd "$HCPFolder"/fsaverage_LR"$LowResMesh"k
-    	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec INVALID ../"$Image".nii.gz
-    pushd 
+    popd 
   fi
 done
 
@@ -254,9 +252,15 @@ for Hemisphere in L R ; do
 	if [ ! -e "$HCPFolder"/fsaverage_LR"$LowResMesh"k ] ; then
 		mkdir -p "$HCPFolder"/fsaverage_LR"$LowResMesh"k
 	fi
+    
+    for Image in rawavg T1 ; do
+      pushd "$HCPFolder"/fsaverage_LR"$LowResMesh"k
+        ${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec INVALID ../"$Image".nii.gz
+      popd
+    done
 
     #Copy Atlas Files
-    pushd "$HCPFolder"
+    pushd "$HCPFolder"/fsaverage_LR"$LowResMesh"k
     	cp "$SurfaceAtlasDIR"/"$Hemisphere".sphere."$LowResMesh"k_fs_LR.surf.gii "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".sphere."$LowResMesh"k_fs_LR.surf.gii
     	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec $Structure ./"$Subject"."$Hemisphere".sphere."$LowResMesh"k_fs_LR.surf.gii
     	cp "$GrayordinatesSpaceDIR"/"$Hemisphere".atlasroi."$LowResMesh"k_fs_LR.shape.gii "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".roi."$LowResMesh"k_fs_LR.shape.gii
@@ -342,7 +346,7 @@ for STRING in "$HCPFolder"@"$HCPFolder"@native "$HCPFolder"@"$HCPFolder"@"$HighR
     Map=`echo $STRINGII | cut -d "@" -f 1`
     Ext=`echo $STRINGII | cut -d "@" -f 2`
     if [ -e "$FolderII"/"$Subject"."$Map"."$Mesh"."$Ext".nii ] ; then
-    	pushd "$HCPFolder"
+    	pushd "$FolderI"
 	      ${CARET7DIR}/wb_command -add-to-spec-file "$FolderI"/"$Subject"."$Mesh".wb.spec INVALID ./"$Subject"."$Map"."$Mesh"."$Ext".nii
     	popd
     fi
