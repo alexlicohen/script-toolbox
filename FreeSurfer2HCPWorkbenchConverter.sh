@@ -105,10 +105,10 @@ for Image in rawavg T1 ; do
   if [ -e "$FreeSurferFolder"/mri/"$Image".mgz ] ; then
     mri_convert -ot nii "$FreeSurferFolder"/mri/"$Image".mgz "$HCPFolder"/"$Image".nii.gz
     fslreorient2std "$HCPFolder"/"$Image".nii.gz "$HCPFolder"/"$Image".nii.gz
-    pushd "$HCPFolder"
+    pushd  > /dev/null "$HCPFolder"
     	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject".native.wb.spec INVALID ./"$Image".nii.gz
     	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject"."$HighResMesh"k_fs_LR.wb.spec INVALID ./"$Image".nii.gz
-    popd 
+    popd  > /dev/null 
   fi
 done
 
@@ -139,15 +139,15 @@ for Hemisphere in L R ; do
     mris_convert "$FreeSurferFolder"/surf/"$hemisphere"h."$Surface" "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii
     ${CARET7DIR}/wb_command -set-structure "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii ${Structure} -surface-type $Type$Secondary
     ${CARET7DIR}/wb_command -surface-apply-affine "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii "$FreeSurferFolder"/mri/c_ras.mat "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii
-    pushd "$HCPFolder"
+    pushd  > /dev/null "$HCPFolder"
     	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject".native.wb.spec $Structure ./"$Subject"."$Hemisphere"."$Surface".native.surf.gii
-    popd
+    popd  > /dev/null
     i=$(($i+1))
   done
 
   #Create midthickness by averaging white and pial surfaces and use it to make inflated surfacess
   for Folder in "$HCPFolder" ; do
-    pushd "$Folder"
+    pushd  > /dev/null "$Folder"
     	${CARET7DIR}/wb_command -surface-average "$Folder"/"$Subject"."$Hemisphere".midthickness.native.surf.gii -surf "$Folder"/"$Subject"."$Hemisphere".white.native.surf.gii -surf "$Folder"/"$Subject"."$Hemisphere".pial.native.surf.gii
     	${CARET7DIR}/wb_command -set-structure "$Folder"/"$Subject"."$Hemisphere".midthickness.native.surf.gii ${Structure} -surface-type ANATOMICAL -surface-secondary-type MIDTHICKNESS
     	${CARET7DIR}/wb_command -add-to-spec-file "$Folder"/"$Subject".native.wb.spec $Structure ./"$Subject"."$Hemisphere".midthickness.native.surf.gii
@@ -168,7 +168,7 @@ for Hemisphere in L R ; do
           ${CARET7DIR}/wb_command -add-to-spec-file "$Folder"/"$Subject".native.wb.spec $Structure ./"$Subject"."$Hemisphere".corticallayer_"$EachLayer".native.surf.gii
         done
       fi
-    popd
+    popd  > /dev/null
   done
 
   #Convert original and registered spherical surfaces and add them to the spec file
@@ -176,9 +176,9 @@ for Hemisphere in L R ; do
     mris_convert "$FreeSurferFolder"/surf/"$hemisphere"h."$Surface" "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii
     ${CARET7DIR}/wb_command -set-structure "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii ${Structure} -surface-type SPHERICAL
   done
-  pushd "$HCPFolder"
+  pushd  > /dev/null "$HCPFolder"
   	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject".native.wb.spec $Structure ./"$Subject"."$Hemisphere".sphere.native.surf.gii
-  popd
+  popd  > /dev/null
 
   #Add more files to the spec file and convert other FreeSurfer surface data to metric/GIFTI including sulc, curv, and thickness.
   for Map in sulc@sulc@Sulc thickness@thickness@Thickness curv@curvature@Curvature ; do
@@ -221,16 +221,16 @@ for Hemisphere in L R ; do
   cp "$SurfaceAtlasDIR"/fs_"$Hemisphere"/fsaverage."$Hemisphere".sphere."$HighResMesh"k_fs_"$Hemisphere".surf.gii "$HCPFolder"/fsaverage/"$Subject"."$Hemisphere".sphere."$HighResMesh"k_fs_"$Hemisphere".surf.gii
   cp "$SurfaceAtlasDIR"/fs_"$Hemisphere"/fs_"$Hemisphere"-to-fs_LR_fsaverage."$Hemisphere"_LR.spherical_std."$HighResMesh"k_fs_"$Hemisphere".surf.gii "$HCPFolder"/fsaverage/"$Subject"."$Hemisphere".def_sphere."$HighResMesh"k_fs_"$Hemisphere".surf.gii
   cp "$SurfaceAtlasDIR"/fsaverage."$Hemisphere"_LR.spherical_std."$HighResMesh"k_fs_LR.surf.gii "$HCPFolder"/"$Subject"."$Hemisphere".sphere."$HighResMesh"k_fs_LR.surf.gii
-  pushd "$HCPFolder"
+  pushd  > /dev/null "$HCPFolder"
   	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject"."$HighResMesh"k_fs_LR.wb.spec $Structure ./"$Subject"."$Hemisphere".sphere."$HighResMesh"k_fs_LR.surf.gii
-  popd
+  popd  > /dev/null
   cp "$SurfaceAtlasDIR"/"$Hemisphere".atlasroi."$HighResMesh"k_fs_LR.shape.gii "$HCPFolder"/"$Subject"."$Hemisphere".roi."$HighResMesh"k_fs_LR.shape.gii
   cp "$SurfaceAtlasDIR"/"$Hemisphere".refsulc."$HighResMesh"k_fs_LR.shape.gii "$HCPFolder"/${Subject}.${Hemisphere}.refsulc."$HighResMesh"k_fs_LR.shape.gii
   if [ -e "$SurfaceAtlasDIR"/colin.cerebral."$Hemisphere".flat."$HighResMesh"k_fs_LR.surf.gii ] ; then
     cp "$SurfaceAtlasDIR"/colin.cerebral."$Hemisphere".flat."$HighResMesh"k_fs_LR.surf.gii "$HCPFolder"/"$Subject"."$Hemisphere".flat."$HighResMesh"k_fs_LR.surf.gii
-    pushd "$HCPFolder"
+    pushd  > /dev/null "$HCPFolder"
     	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject"."$HighResMesh"k_fs_LR.wb.spec $Structure ./"$Subject"."$Hemisphere".flat."$HighResMesh"k_fs_LR.surf.gii
-    popd
+    popd  > /dev/null
   fi
 
   #Concatinate FS registration to FS --> FS_LR registration
@@ -256,15 +256,15 @@ for Hemisphere in L R ; do
   #Populate Highres fs_LR spec file.  Deform surfaces and other data according to native to folding-based registration selected above.  Regenerate inflated surfaces.
   for Surface in white midthickness pial $LayersNameList; do
     ${CARET7DIR}/wb_command -surface-resample "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii ${RegSphere} "$HCPFolder"/"$Subject"."$Hemisphere".sphere."$HighResMesh"k_fs_LR.surf.gii BARYCENTRIC "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$HighResMesh"k_fs_LR.surf.gii
-    pushd "$HCPFolder"
+    pushd  > /dev/null "$HCPFolder"
     	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject"."$HighResMesh"k_fs_LR.wb.spec $Structure ./"$Subject"."$Hemisphere"."$Surface"."$HighResMesh"k_fs_LR.surf.gii
-    popd
+    popd  > /dev/null
   done
   ${CARET7DIR}/wb_command -surface-generate-inflated "$HCPFolder"/"$Subject"."$Hemisphere".midthickness."$HighResMesh"k_fs_LR.surf.gii "$HCPFolder"/"$Subject"."$Hemisphere".inflated."$HighResMesh"k_fs_LR.surf.gii "$HCPFolder"/"$Subject"."$Hemisphere".very_inflated."$HighResMesh"k_fs_LR.surf.gii -iterations-scale 2.5
-  pushd "$HCPFolder"
+  pushd  > /dev/null "$HCPFolder"
   	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject"."$HighResMesh"k_fs_LR.wb.spec $Structure ./"$Subject"."$Hemisphere".inflated."$HighResMesh"k_fs_LR.surf.gii
   	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject"."$HighResMesh"k_fs_LR.wb.spec $Structure ./"$Subject"."$Hemisphere".very_inflated."$HighResMesh"k_fs_LR.surf.gii
-  popd
+  popd  > /dev/null
 
 
   for Map in thickness curvature ; do
@@ -286,13 +286,13 @@ for Hemisphere in L R ; do
 	fi
     
     for Image in rawavg T1 ; do
-      pushd "$HCPFolder"/fsaverage_LR"$LowResMesh"k
+      pushd  > /dev/null "$HCPFolder"/fsaverage_LR"$LowResMesh"k
         ${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec INVALID ../"$Image".nii.gz
-      popd
+      popd  > /dev/null
     done
 
     #Copy Atlas Files
-    pushd "$HCPFolder"/fsaverage_LR"$LowResMesh"k
+    pushd  > /dev/null "$HCPFolder"/fsaverage_LR"$LowResMesh"k
     	cp "$SurfaceAtlasDIR"/"$Hemisphere".sphere."$LowResMesh"k_fs_LR.surf.gii "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".sphere."$LowResMesh"k_fs_LR.surf.gii
     	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec $Structure ./"$Subject"."$Hemisphere".sphere."$LowResMesh"k_fs_LR.surf.gii
     	cp "$GrayordinatesSpaceDIR"/"$Hemisphere".atlasroi."$LowResMesh"k_fs_LR.shape.gii "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".roi."$LowResMesh"k_fs_LR.shape.gii
@@ -309,7 +309,7 @@ for Hemisphere in L R ; do
 	    ${CARET7DIR}/wb_command -surface-generate-inflated "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".midthickness."$LowResMesh"k_fs_LR.surf.gii "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".inflated."$LowResMesh"k_fs_LR.surf.gii "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".very_inflated."$LowResMesh"k_fs_LR.surf.gii -iterations-scale 0.75
 	    ${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec $Structure ./"$Subject"."$Hemisphere".inflated."$LowResMesh"k_fs_LR.surf.gii
 	    ${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec $Structure ./"$Subject"."$Hemisphere".very_inflated."$LowResMesh"k_fs_LR.surf.gii
-	popd
+	popd  > /dev/null
 
     for Map in sulc thickness curvature ; do
       ${CARET7DIR}/wb_command -metric-resample "$HCPFolder"/"$Subject"."$Hemisphere"."$Map".native.shape.gii ${RegSphere} "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".sphere."$LowResMesh"k_fs_LR.surf.gii ADAP_BARY_AREA "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$Map"."$LowResMesh"k_fs_LR.shape.gii -area-surfs "$HCPFolder"/"$Subject"."$Hemisphere".midthickness.native.surf.gii "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".midthickness."$LowResMesh"k_fs_LR.surf.gii -current-roi "$HCPFolder"/"$Subject"."$Hemisphere".roi.native.shape.gii
@@ -378,9 +378,9 @@ for STRING in "$HCPFolder"@"$HCPFolder"@native "$HCPFolder"@"$HCPFolder"@"$HighR
     Map=`echo $STRINGII | cut -d "@" -f 1`
     Ext=`echo $STRINGII | cut -d "@" -f 2`
     if [ -e "$FolderII"/"$Subject"."$Map"."$Mesh"."$Ext".nii ] ; then
-    	pushd "$FolderI"
+    	pushd  > /dev/null "$FolderI"
 	      ${CARET7DIR}/wb_command -add-to-spec-file "$FolderI"/"$Subject"."$Mesh".wb.spec INVALID ./"$Subject"."$Map"."$Mesh"."$Ext".nii
-    	popd
+    	popd  > /dev/null
     fi
   done
 done
