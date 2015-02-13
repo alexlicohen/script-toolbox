@@ -25,6 +25,7 @@ show_usage() {
     echo "This makes a subdir /hcp and creates wb_view .spec files from the FS output"
     echo "Needs two inputs in the style of: --path=/blah/blah/blah --subject=fc_12345"
     echo "where this path is equivalent to SUBJECTS_DIR. Adds rawavg and T1 to .specs"
+    echo "Can also accept an input: --layers=0.33@0.66 to make more cortical surfaces"
     echo "NOTE: all surfaces are currently alinged with the T1.mgz, per FS convention"
     echo "The plan will be to add a switch to generate surfaces in T1 or rawavg space"
     exit 1
@@ -45,9 +46,13 @@ fi
 
 log_Msg "Parsing Command Line Options"
 
+#Initializing Optional Variables
+Layers=""
+
 # Input Variables
 StudyFolder=`opts_GetOpt1 "--path" $@`
 Subject=`opts_GetOpt1 "--subject" $@`
+Layers=`opts_GetOpt1 "--layers" $@`
 
 FreeSurferFolder="$StudyFolder"/"$Subject"
 
@@ -149,6 +154,20 @@ for Hemisphere in L R ; do
     	${CARET7DIR}/wb_command -surface-generate-inflated "$Folder"/"$Subject"."$Hemisphere".midthickness.native.surf.gii "$Folder"/"$Subject"."$Hemisphere".inflated.native.surf.gii "$Folder"/"$Subject"."$Hemisphere".very_inflated.native.surf.gii -iterations-scale 2.5
     	${CARET7DIR}/wb_command -add-to-spec-file "$Folder"/"$Subject".native.wb.spec $Structure ./"$Subject"."$Hemisphere".inflated.native.surf.gii
     	${CARET7DIR}/wb_command -add-to-spec-file "$Folder"/"$Subject".native.wb.spec $Structure ./"$Subject"."$Hemisphere".very_inflated.native.surf.gii
+      
+      #Create ADDITIONAL cortical layers by averaging white and pial surfaces with variable distance from the surfaces
+      if [ -z "$Layers" ] ; then
+        echo "Not making additional cortical layer surfaces"
+      else
+        echo "Making additional cortical layer surfaces"
+        LayersList=`echo ${Layers} | sed 's/@/ /g'`
+        LayersNameList=`echo corticallayer_${Layers} | sed 's/@/ corticallayer_/g'`
+        for EachLayer in $LayersList; do
+          ${CARET7DIR}/wb_command -surface-cortex-layer "$Folder"/"$Subject"."$Hemisphere".white.native.surf.gii "$Folder"/"$Subject"."$Hemisphere".pial.native.surf.gii "$EachLayer" "$Folder"/"$Subject"."$Hemisphere".corticallayer_"$EachLayer".native.surf.gii
+          ${CARET7DIR}/wb_command -set-structure "$Folder"/"$Subject"."$Hemisphere".corticallayer_"$EachLayer".native.surf.gii ${Structure} -surface-type ANATOMICAL -surface-secondary-type INVALID
+          ${CARET7DIR}/wb_command -add-to-spec-file "$Folder"/"$Subject".native.wb.spec $Structure ./"$Subject"."$Hemisphere".corticallayer_"$EachLayer".native.surf.gii
+        done
+      fi
     popd
   done
 
@@ -235,7 +254,7 @@ for Hemisphere in L R ; do
 
 
   #Populate Highres fs_LR spec file.  Deform surfaces and other data according to native to folding-based registration selected above.  Regenerate inflated surfaces.
-  for Surface in white midthickness pial ; do
+  for Surface in white midthickness pial $LayersNameList; do
     ${CARET7DIR}/wb_command -surface-resample "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii ${RegSphere} "$HCPFolder"/"$Subject"."$Hemisphere".sphere."$HighResMesh"k_fs_LR.surf.gii BARYCENTRIC "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$HighResMesh"k_fs_LR.surf.gii
     pushd "$HCPFolder"
     	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject"."$HighResMesh"k_fs_LR.wb.spec $Structure ./"$Subject"."$Hemisphere"."$Surface"."$HighResMesh"k_fs_LR.surf.gii
@@ -283,7 +302,7 @@ for Hemisphere in L R ; do
     	fi
 
 	    #Create downsampled fs_LR spec files.
-	    for Surface in white midthickness pial ; do
+	    for Surface in white midthickness pial $LayersNameList; do
 	      ${CARET7DIR}/wb_command -surface-resample "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii ${RegSphere} "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".sphere."$LowResMesh"k_fs_LR.surf.gii BARYCENTRIC "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$Surface"."$LowResMesh"k_fs_LR.surf.gii
 	      ${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec $Structure ./"$Subject"."$Hemisphere"."$Surface"."$LowResMesh"k_fs_LR.surf.gii
 	    done
