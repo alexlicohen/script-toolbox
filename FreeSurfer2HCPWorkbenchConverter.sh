@@ -23,11 +23,12 @@ source $HCPPIPEDIR/global/scripts/opts.shlib # Command line option functions
 
 show_usage() {
     echo "This makes a subdir /hcp and creates wb_view .spec files from the FS output"
-    echo "Needs two inputs in the style of: --path=/blah/blah/blah --subject=fc_12345"
-    echo "where this path is equivalent to SUBJECTS_DIR. Adds rawavg and T1 to .specs"
-    echo "Can also accept an input: --layers=0.33@0.66 to make more cortical surfaces"
-    echo "NOTE: all surfaces are currently alinged with the T1.mgz, per FS convention"
-    echo "The plan will be to add a switch to generate surfaces in T1 or rawavg space"
+    echo "  Inputs:"
+    echo "    --subject=fc_12345"
+    echo "   [--path=/blah/blah/blah]  if not specified, assumes pwd"
+    echo "   [--layers=0.33@0.66]      to make more cortical surfaces (0->1 ~ white->pial)"
+    echo "   [--subcort=1.3@2]         to make subcortical surfaces (mm below white)"
+    echo "   [--target=rawavg]         if not specified, assumes T1"
     exit 1
 }
 
@@ -46,15 +47,21 @@ fi
 
 log_Msg "Parsing Command Line Options"
 
-#Initializing Optional Variables
+#Initializing Variables with Default Values
+StudyFolder=`pwd`
 Layers=""
+Subcort=""
+Target="T1"
 
 # Input Variables
 StudyFolder=`opts_GetOpt1 "--path" $@`
 Subject=`opts_GetOpt1 "--subject" $@`
 Layers=`opts_GetOpt1 "--layers" $@`
+Subcort=`opts_GetOpt1 "--subcort" $@`
+Target=`opts_GetOpt1 "--target" $@`
 
 FreeSurferFolder="$StudyFolder"/"$Subject"
+SUBJECTS_DIR="$StudyFolder"
 
 # Hardcoded parameters
 HCPFolder="$FreeSurferFolder"/hcp
@@ -91,17 +98,25 @@ echo "0 0 1 ""$MatrixZ" >> "$FreeSurferFolder"/mri/c_ras.mat
 echo "0 0 0 1" >> "$FreeSurferFolder"/mri/c_ras.mat
 
 
-#Convert FreeSurfer Volumes
+#Convert FreeSurfer Volumes (and transform to $Target, if not T1.mgz)
 for Image in wmparc aparc.a2009s+aseg aparc+aseg ; do
   if [ -e "$FreeSurferFolder"/mri/"$Image".mgz ] ; then
-    mri_convert -ot nii "$FreeSurferFolder"/mri/"$Image".mgz "$HCPFolder"/"$Image".nii.gz
+    if [ ! $Target = "T1" ] ; then
+      mri_label2vol --seg "$FreeSurferFolder"/mri/"$Image".mgz --temp "$FreeSurferFolder"/mri/"$Target".mgz --o "$FreeSurferFolder"/mri/"$Image"-in-"$Target".mgz --regheader "$FreeSurferFolder"/mri/"$Image".mgz
+      NewImage=`echo ${Image}-in-"${Target}"`
+      touch "$HCPFolder"/All_Files_are_registered_to_"$Target"
+    else
+      NewImage=$Image
+      touch "$HCPFolder"/All_Files_are_registered_to_T1
+    fi
+    mri_convert -ot nii "$FreeSurferFolder"/mri/"$NewImage".mgz "$HCPFolder"/"$Image".nii.gz
     fslreorient2std "$HCPFolder"/"$Image".nii.gz "$HCPFolder"/"$Image".nii.gz
     ${CARET7DIR}/wb_command -volume-label-import "$HCPFolder"/"$Image".nii.gz "$FreeSurferLabels" "$HCPFolder"/"$Image".nii.gz -drop-unused-labels
   fi
 done
 
 #Add Anatomical Volumes
-for Image in rawavg T1 ; do
+for Image in $Target ; do
   if [ -e "$FreeSurferFolder"/mri/"$Image".mgz ] ; then
     mri_convert -ot nii "$FreeSurferFolder"/mri/"$Image".mgz "$HCPFolder"/"$Image".nii.gz
     fslreorient2std "$HCPFolder"/"$Image".nii.gz "$HCPFolder"/"$Image".nii.gz
@@ -136,12 +151,19 @@ for Hemisphere in L R ; do
     else
       Secondary=""
     fi
-    mris_convert "$FreeSurferFolder"/surf/"$hemisphere"h."$Surface" "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii
-    ${CARET7DIR}/wb_command -set-structure "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii ${Structure} -surface-type $Type$Secondary
-    ${CARET7DIR}/wb_command -surface-apply-affine "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii "$FreeSurferFolder"/mri/c_ras.mat "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii
-    pushd  > /dev/null "$HCPFolder"
-    	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject".native.wb.spec $Structure ./"$Subject"."$Hemisphere"."$Surface".native.surf.gii
-    popd  > /dev/null
+    if [ ! $Target = "T1" ] ; then
+      tkregister2 --targ "$FreeSurferFolder"/mri/"$Target".mgz --mov "$FreeSurferFolder"/mri/orig.mgz --reg "$FreeSurferFolder"/mri/register."$Target".dat --noedit --regheader
+      mri_surf2surf --sval-xyz "$Surface" --reg "$FreeSurferFolder"/mri/register."$Target".dat "$FreeSurferFolder"/mri/"$Target".mgz --tval "$hemisphere"h."$Surface"."$Target" --tval-xyz --hemi "$hemisphere"h --s $Subject
+      NewSurface=`echo ${Surface}.${Target}`
+    else
+      NewSurface=$Surface
+    fi
+          mris_convert "$FreeSurferFolder"/surf/"$hemisphere"h."$NewSurface" "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii
+          ${CARET7DIR}/wb_command -set-structure "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii ${Structure} -surface-type $Type$Secondary
+          ${CARET7DIR}/wb_command -surface-apply-affine "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii "$FreeSurferFolder"/mri/c_ras.mat "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii
+          pushd  > /dev/null "$HCPFolder"
+            ${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject".native.wb.spec $Structure ./"$Subject"."$Hemisphere"."$Surface".native.surf.gii
+          popd  > /dev/null
     i=$(($i+1))
   done
 
@@ -155,11 +177,35 @@ for Hemisphere in L R ; do
     	${CARET7DIR}/wb_command -add-to-spec-file "$Folder"/"$Subject".native.wb.spec $Structure ./"$Subject"."$Hemisphere".inflated.native.surf.gii
     	${CARET7DIR}/wb_command -add-to-spec-file "$Folder"/"$Subject".native.wb.spec $Structure ./"$Subject"."$Hemisphere".very_inflated.native.surf.gii
       
+      #Create subcortical surface by eroding the white surface
+      if [ -z "$Subcort" ] ; then
+        echo "Not creating subcortical surfaces"
+      else
+        echo "Creating subcortical surfaces"
+        SubcortList=`echo ${Subcort} | sed 's/@/ /g'`
+        SubcortNameList=`echo subcortlayer_mm_${Subcort} | sed 's/@/ subcortlayer_mm_/g'`
+        for EachsSubLayer in $SubcortList; do
+          mris_expand "$FreeSurferFolder"/surf/"$hemisphere"h.white -${EachSubLayer} "$FreeSurferFolder"/surf/"$hemisphere"h.subcortlayer_"$EachSubLayer"mm
+        done
+        for Surface in $SubcortNameList ; do
+          if [ ! $Target = "T1" ] ; then
+            NewSurface=`echo ${Surface}.${Target}`
+          else
+            NewSurface=$Surface
+          fi
+          mris_convert "$FreeSurferFolder"/surf/"$hemisphere"h."$NewSurface" "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii
+          ${CARET7DIR}/wb_command -set-structure "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii ${Structure} -surface-type ANATOMICAL -surface-secondary-type INVALID
+          ${CARET7DIR}/wb_command -surface-apply-affine "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii "$FreeSurferFolder"/mri/c_ras.mat "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii
+          ${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject".native.wb.spec $Structure ./"$Subject"."$Hemisphere"."$Surface".native.surf.gii
+        done
+      done
+
+
       #Create ADDITIONAL cortical layers by averaging white and pial surfaces with variable distance from the surfaces
       if [ -z "$Layers" ] ; then
-        echo "Not making additional cortical layer surfaces"
+        echo "Not creating additional cortical layer surfaces"
       else
-        echo "Making additional cortical layer surfaces"
+        echo "Creating additional cortical layer surfaces"
         LayersList=`echo ${Layers} | sed 's/@/ /g'`
         LayersNameList=`echo corticallayer_${Layers} | sed 's/@/ corticallayer_/g'`
         for EachLayer in $LayersList; do
