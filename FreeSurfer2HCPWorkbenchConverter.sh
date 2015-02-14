@@ -184,8 +184,8 @@ for Hemisphere in L R ; do
         echo "Creating subcortical surfaces"
         SubcortList=`echo ${Subcort} | sed 's/@/ /g'`
         SubcortNameList=`echo subcortlayer_mm_${Subcort} | sed 's/@/ subcortlayer_mm_/g'`
-        for EachsSubLayer in $SubcortList; do
-          mris_expand "$FreeSurferFolder"/surf/"$hemisphere"h.white -${EachSubLayer} "$FreeSurferFolder"/surf/"$hemisphere"h.subcortlayer_"$EachSubLayer"mm
+        for EachSubLayer in $SubcortList; do
+          mris_expand "$FreeSurferFolder"/surf/"$hemisphere"h.white -${EachSubLayer} "$FreeSurferFolder"/surf/"$hemisphere"h.subcortlayer_mm_"$EachSubLayer"
         done
         for Surface in $SubcortNameList ; do
           if [ ! $Target = "T1" ] ; then
@@ -198,7 +198,7 @@ for Hemisphere in L R ; do
           ${CARET7DIR}/wb_command -surface-apply-affine "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii "$FreeSurferFolder"/mri/c_ras.mat "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii
           ${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject".native.wb.spec $Structure ./"$Subject"."$Hemisphere"."$Surface".native.surf.gii
         done
-      done
+      fi
 
 
       #Create ADDITIONAL cortical layers by averaging white and pial surfaces with variable distance from the surfaces
@@ -300,7 +300,7 @@ for Hemisphere in L R ; do
 
 
   #Populate Highres fs_LR spec file.  Deform surfaces and other data according to native to folding-based registration selected above.  Regenerate inflated surfaces.
-  for Surface in white midthickness pial $LayersNameList; do
+  for Surface in white midthickness pial $LayersNameList $SubcortNameList; do
     ${CARET7DIR}/wb_command -surface-resample "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii ${RegSphere} "$HCPFolder"/"$Subject"."$Hemisphere".sphere."$HighResMesh"k_fs_LR.surf.gii BARYCENTRIC "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$HighResMesh"k_fs_LR.surf.gii
     pushd  > /dev/null "$HCPFolder"
     	${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject"."$HighResMesh"k_fs_LR.wb.spec $Structure ./"$Subject"."$Hemisphere"."$Surface"."$HighResMesh"k_fs_LR.surf.gii
@@ -331,7 +331,7 @@ for Hemisphere in L R ; do
 		mkdir -p "$HCPFolder"/fsaverage_LR"$LowResMesh"k
 	fi
     
-    for Image in rawavg T1 ; do
+    for Image in $Target ; do
       pushd  > /dev/null "$HCPFolder"/fsaverage_LR"$LowResMesh"k
         ${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec INVALID ../"$Image".nii.gz
       popd  > /dev/null
@@ -348,7 +348,7 @@ for Hemisphere in L R ; do
     	fi
 
 	    #Create downsampled fs_LR spec files.
-	    for Surface in white midthickness pial $LayersNameList; do
+	    for Surface in white midthickness pial $LayersNameList $SubcortNameList; do
 	      ${CARET7DIR}/wb_command -surface-resample "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii ${RegSphere} "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".sphere."$LowResMesh"k_fs_LR.surf.gii BARYCENTRIC "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$Surface"."$LowResMesh"k_fs_LR.surf.gii
 	      ${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec $Structure ./"$Subject"."$Hemisphere"."$Surface"."$LowResMesh"k_fs_LR.surf.gii
 	    done
