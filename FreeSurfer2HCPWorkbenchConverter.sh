@@ -194,7 +194,7 @@ for Hemisphere in L R ; do
           else
             TargetSuffix=""
           fi
-          mris_expand "$FreeSurferFolder"/surf/"$hemisphere"h.white"$TargetSuffix" -${EachSubLayer} "$FreeSurferFolder"/surf/"$hemisphere"h.subcortlayer_mm_"$EachSubLayer"
+          mris_expand "$FreeSurferFolder"/surf/"$hemisphere"h.white"$TargetSuffix" -${EachSubLayer} "$FreeSurferFolder"/surf/"$hemisphere"h.subcortlayer_mm_"$EachSubLayer""$TargetSuffix"
         done
         for Surface in $SubcortNameList ; do
           if [ ! $Target = "T1" ] ; then
