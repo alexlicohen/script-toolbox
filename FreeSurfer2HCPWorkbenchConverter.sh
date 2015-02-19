@@ -47,18 +47,22 @@ fi
 
 log_Msg "Parsing Command Line Options"
 
-#Initializing Variables with Default Values
-StudyFolder=`pwd`
-Layers=""
-Subcort=""
-Target="T1"
-
 # Input Variables
 StudyFolder=`opts_GetOpt1 "--path" $@`
 Subject=`opts_GetOpt1 "--subject" $@`
 Layers=`opts_GetOpt1 "--layers" $@`
 Subcort=`opts_GetOpt1 "--subcort" $@`
 Target=`opts_GetOpt1 "--target" $@`
+
+#Initializing Variables with Default Values if not otherwise specified
+defaultopt() {
+    echo $1
+}
+WD=`pwd`
+StudyFolder=`defaultopt $StudyFolder $WD`
+Layers=`defaultopt $Layers ""`
+Subcort=`defaultopt $Subcort ""`
+Target=`defaultopt $Target T1`
 
 FreeSurferFolder="$StudyFolder"/"$Subject"
 SUBJECTS_DIR="$StudyFolder"
@@ -152,7 +156,7 @@ for Hemisphere in L R ; do
       Secondary=""
     fi
     if [ ! $Target = "T1" ] ; then
-      tkregister2 --targ "$FreeSurferFolder"/mri/"$Target".mgz --mov "$FreeSurferFolder"/mri/orig.mgz --reg "$FreeSurferFolder"/mri/register."$Target".dat --noedit --regheader
+      tkregister2 --mov "$FreeSurferFolder"/mri/"$Target".mgz --targ "$FreeSurferFolder"/mri/orig.mgz --reg "$FreeSurferFolder"/mri/register."$Target".dat --noedit --regheader
       mri_surf2surf --sval-xyz "$Surface" --reg "$FreeSurferFolder"/mri/register."$Target".dat "$FreeSurferFolder"/mri/"$Target".mgz --tval "$hemisphere"h."$Surface"."$Target" --tval-xyz --hemi "$hemisphere"h --s $Subject
       NewSurface=`echo ${Surface}.${Target}`
     else
@@ -185,7 +189,12 @@ for Hemisphere in L R ; do
         SubcortList=`echo ${Subcort} | sed 's/@/ /g'`
         SubcortNameList=`echo subcortlayer_mm_${Subcort} | sed 's/@/ subcortlayer_mm_/g'`
         for EachSubLayer in $SubcortList; do
-          mris_expand "$FreeSurferFolder"/surf/"$hemisphere"h.white -${EachSubLayer} "$FreeSurferFolder"/surf/"$hemisphere"h.subcortlayer_mm_"$EachSubLayer"
+          if [ ! $Target = "T1" ] ; then
+            TargetSuffix=."$Target"
+          else
+            TargetSuffix=""
+          fi
+          mris_expand "$FreeSurferFolder"/surf/"$hemisphere"h.white"$TargetSuffix" -${EachSubLayer} "$FreeSurferFolder"/surf/"$hemisphere"h.subcortlayer_mm_"$EachSubLayer"
         done
         for Surface in $SubcortNameList ; do
           if [ ! $Target = "T1" ] ; then
