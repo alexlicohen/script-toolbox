@@ -22,8 +22,25 @@ source $HCPPIPEDIR/global/scripts/opts.shlib # Command line option functions
 # --------------------------------------------------------------------------------
 
 show_usage() {
-    echo "Usage information To Be Written"
+    echo "This takes a nifti volume and does surface intersections with a FS->HCP spec file"
+    echo "  Inputs:"
+    echo "    --subject=fc_12345"
+    echo "    --inputvolume=/absolute/path/to/contrast_volume.nii.gz"
+    echo "    --inputname=DIR or FLAIR, etc..."
+    echo "    --layers=0.66@midthickness@0.33@subcortlayer_mm_1  which surfaces to project to"
+    echo "   	  choices for layers include:"
+    echo "   								 pial"
+    echo "   								 midthickness"
+    echo "   								 white"
+    echo "   								 corticallayer_0.25  (if you made one...)"
+    echo "   								 subcortlayer_mm_1.5 (if you made one...)"
+    echo "   [--path=/blah/blah/blah]  if not specified, assumes pwd"
+    echo "   [--onefile=name_of_output_metric]  specify if you would like an combined ASCII file output"
     exit 1
+}
+
+defaultopt() {
+    echo $1
 }
 
 # --------------------------------------------------------------------------------
@@ -44,13 +61,19 @@ log_Msg "Parsing Command Line Options"
 # Input Variables
 StudyFolder=`opts_GetOpt1 "--path" $@`
 Subject=`opts_GetOpt1 "--subject" $@`
-InputVolume=`opts_GetOpt1 "--source" $@` # The original volume used to run freesurfer with, used for orientation and reslicing, if needed.
+Layers=`opts_GetOpt1 "--layers" $@`
 T2wImage=`opts_GetOpt1 "--inputvolume" $@` #T2w, DIR or other image already registered to T1 used as HCP Pipelines/Freesurfer input
 T2shortname=`opts_GetOpt1 "--inputname" $@` #what prefix/suffix to add to new files (if using T2 images, this could be T2w, etc...)
+Onefile=`opts_GetOpt1 "--onefile" $@`
+
+#Initializing Variables with Default Values if not otherwise specified
+WD="`pwd`"
+StudyFolder=`defaultopt $StudyFolder $WD`
+Onefile=`defaultopt $Onefile ""`
 
 # hardcoded parameters
 HighResMesh="164"
-LowResMeshes="32"
+LowResMesh="32"
 
 HCPFolder="$StudyFolder"/"$Subject"/hcp
 
@@ -63,11 +86,7 @@ T2wImage="$HCPFolder"/"$T2shortname".nii.gz
 # Add volume files to spec files
 ${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject".native.wb.spec INVALID "$T2wImage"
 ${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject"."$HighResMesh"k_fs_LR.wb.spec INVALID "$T2wImage"
-
-for LowResMesh in ${LowResMeshes} ; do
-  ${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec INVALID "$T2wImage"
-done
-
+${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec INVALID "$T2wImage"
 
 # Loop through left and right hemispheres
 for Hemisphere in L R ; do
@@ -80,20 +99,9 @@ for Hemisphere in L R ; do
 		Structure="CORTEX_RIGHT"
 	fi
 
-	# Loop through the surfaces, we could add more...
-	Types="ANATOMICAL@GRAY_WHITE ANATOMICAL@MIDTHICKNESS ANATOMICAL@PIAL"
-	#Types="ANATOMICAL@MIDTHICKNESS"
-	i=1
-	for Surface in white midthickness pial ; do
-	#for Surface in midthickness ; do
-		Type=`echo "$Types" | cut -d " " -f $i`
-		Secondary=`echo "$Type" | cut -d "@" -f 2`
-		Type=`echo "$Type" | cut -d "@" -f 1`
-		if [ ! $Secondary = $Type ] ; then
-			Secondary=`echo " -surface-secondary-type ""$Secondary"`
-		else
-			Secondary=""
-		fi
+	# Loop through the surfaces
+	LayersList=`echo ${Layers} | sed 's/@/ /g'`
+	for Surface in $LayersList; do
 
 		# sample the volume using each surface (alternatively could use the ribbon or myelin techniques, but for now, just use trilinear...)
 		${CARET7DIR}/wb_command -volume-to-surface-mapping "$T2wImage" "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$T2shortname".native.func.gii -trilinear
@@ -103,14 +111,11 @@ for Hemisphere in L R ; do
 		# resample data to the hires surface atlas mesh
 		${CARET7DIR}/wb_command -metric-resample "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$T2shortname".native.func.gii  "$HCPFolder"/"${Subject}.${Hemisphere}.sphere.reg.reg_LR.native.surf.gii" "$HCPFolder"/"$Subject"."$Hemisphere".sphere."$HighResMesh"k_fs_LR.surf.gii ADAP_BARY_AREA "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$T2shortname"."$HighResMesh"k_fs_LR.func.gii -area-surfs "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$HighResMesh"k_fs_LR.surf.gii
 
-		# add it to the spec file
+		# add it to the spec files
 		${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject"."$HighResMesh"k_fs_LR.wb.spec $Structure "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$T2shortname"."$HighResMesh"k_fs_LR.func.gii
 
-		for LowResMesh in ${LowResMeshes} ; do
-			${CARET7DIR}/wb_command -metric-resample "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$T2shortname".native.func.gii "$HCPFolder"/"${Subject}.${Hemisphere}.sphere.reg.reg_LR.native.surf.gii" "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".sphere."$LowResMesh"k_fs_LR.surf.gii ADAP_BARY_AREA "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$Surface"."$T2shortname"."$LowResMesh"k_fs_LR.func.gii -area-surfs "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$Surface"."$LowResMesh"k_fs_LR.surf.gii
-
-			${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec $Structure "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$Surface"."$T2shortname"."$LowResMesh"k_fs_LR.func.gii
-		done
+		${CARET7DIR}/wb_command -metric-resample "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$T2shortname".native.func.gii "$HCPFolder"/"${Subject}.${Hemisphere}.sphere.reg.reg_LR.native.surf.gii" "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".sphere."$LowResMesh"k_fs_LR.surf.gii ADAP_BARY_AREA "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$Surface"."$T2shortname"."$LowResMesh"k_fs_LR.func.gii -area-surfs "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$Surface"."$LowResMesh"k_fs_LR.surf.gii
+		${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec $Structure "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$Surface"."$T2shortname"."$LowResMesh"k_fs_LR.func.gii
 	done
 done
 
