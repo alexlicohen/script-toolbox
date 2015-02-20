@@ -119,7 +119,7 @@ for Hemisphere in L R ; do
 	done
 done
 
- if [ ! -z "$Subcort" ] ; then
+ if [ ! -z "$onefile" ] ; then
  	echo "Creating single ASCII #.func.gii output for analysis"
  	for Hemisphere in L R ; do
 	# Set a bunch of different ways of saying left and right
