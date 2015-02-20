@@ -27,7 +27,7 @@ show_usage() {
     echo "    --subject=fc_12345"
     echo "    --inputvolume=/absolute/path/to/contrast_volume.nii.gz"
     echo "    --inputname=DIR or FLAIR, etc..."
-    echo "    --layers=0.66@midthickness@0.33@subcortlayer_mm_1  which surfaces to project to"
+    echo "    --layers=corticallayer_0.66@corticallayer_0.33@subcortlayer_mm_1  which surfaces to project to"
     echo "   	  choices for layers include:"
     echo "   								 pial"
     echo "   								 midthickness"
@@ -118,6 +118,40 @@ for Hemisphere in L R ; do
 		${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec $Structure "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$Surface"."$T2shortname"."$LowResMesh"k_fs_LR.func.gii
 	done
 done
+
+ if [ ! -z "$Subcort" ] ; then
+ 	echo "Creating single ASCII #.func.gii output for analysis"
+ 	for Hemisphere in L R ; do
+	# Set a bunch of different ways of saying left and right
+	if [ $Hemisphere = "L" ] ; then
+		hemisphere="l"
+		Structure="CORTEX_LEFT"
+	elif [ $Hemisphere = "R" ] ; then
+		hemisphere="r"
+		Structure="CORTEX_RIGHT"
+	fi
+
+	# Generate list of metrics to merge
+	for SurfaceSet in native "$HighResMesh"k_fs_LR ; do
+		rm "$HCPFolder"/"$Subject"."$Hemisphere"."$T2shortname"."$SurfaceSet".onefile.info.txt #2> /dev/null
+		MetricList="-metric "
+		for Layer in $LayersList ; do
+			echo -metric "$HCPFolder"/"$Subject"."$Hemisphere"."$Layer".$T2shortname.$SurfaceSet.func.gii >> "$HCPFolder"/"$Subject"."$Hemisphere"."$T2shortname"."$SurfaceSet".onefile.info.txt
+		done
+		wb_command -metric-merge "$HCPFolder"/"$Subject"."$Hemisphere"."$T2shortname"."$SurfaceSet".onefile.func.gii `cat "$HCPFolder"/"$Subject"."$Hemisphere"."$T2shortname"."$SurfaceSet".onefile.info.txt`
+		wb_command -gifti-convert ASCII "$HCPFolder"/"$Subject"."$Hemisphere"."$T2shortname"."$SurfaceSet".onefile.func.gii "$HCPFolder"/"$Subject"."$Hemisphere"."$T2shortname"."$SurfaceSet".onefile.func.gii
+	done
+	# Make the Low-rez set too
+	for SurfaceSet in "$LowResMesh"k_fs_LR ; do
+		rm "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$T2shortname"."$SurfaceSet".onefile.info.txt #2> /dev/null
+		MetricList="-metric "
+		for Layer in $LayersList ; do
+			echo -metric "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$Layer".$T2shortname.$SurfaceSet.func.gii >> "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$T2shortname"."$SurfaceSet".onefile.info.txt
+		done
+		wb_command -metric-merge "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$T2shortname"."$SurfaceSet".onefile.func.gii `cat "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$T2shortname"."$SurfaceSet".onefile.info.txt`
+		wb_command -gifti-convert ASCII "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$T2shortname"."$SurfaceSet".onefile.func.gii "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$T2shortname"."$SurfaceSet".onefile.func.gii
+	done
+
 
 
 log_Msg "Completed"
