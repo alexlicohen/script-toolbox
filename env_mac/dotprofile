@@ -1,43 +1,52 @@
-
 # FSL Setup
-	FSLDIR=/usr/local/fsl
-	PATH=${FSLDIR}/bin:${PATH}
-	export FSLDIR PATH
-	source ${FSLDIR}/etc/fslconf/fsl.sh
+FSLDIR=/usr/local/fsl
+PATH=${FSLDIR}/bin:${PATH}
+export FSLDIR PATH
+source ${FSLDIR}/etc/fslconf/fsl.sh
 
 # FREESURFER Setup
-	export FREESURFER_HOME=/Applications/freesurfer
-	source $FREESURFER_HOME/SetUpFreeSurfer.sh
+export FREESURFER_HOME=/Applications/freesurfer
+source $FREESURFER_HOME/SetUpFreeSurfer.sh
 
 # HCP Pipelines Setup
-	export HCPPIPEDIR=/Applications/Pipelines-3.4.0
-	export PATH=$PATH:$HCPPIPEDIR
-	echo "HCPPIPEDIR        $HCPPIPEDIR"
-	source $HCPPIPEDIR/SetUpHCPPipeline_stone.sh
+export HCPPIPEDIR=/Applications/Pipelines
+export PATH=$PATH:$HCPPIPEDIR
+echo "HCPPIPEDIR        $HCPPIPEDIR"
+source ~/SetUpHCPPipelines_Mac.sh
 
 # WB_bin Setup
-	export HCBDIR=/Applications/workbench/bin_macosx64
-	export PATH=${PATH}:${HCBDIR}
-	echo "HCBDIR            $HCBDIR"
+export HCBDIR=/Applications/workbench/bin_macosx64
+export PATH=${PATH}:${HCBDIR}
+echo "HCBDIR            $HCBDIR"
 
 # FIX Setup
-	FSL_FIXDIR=/usr/local/fix
-	PATH=${FSL_FIXDIR}:${PATH}
-	export FSL_FIXDIR PATH
-	echo "FSL_FIXDIR        $FSL_FIXDIR"
+#FSL_FIXDIR=/usr/local/fix
+#PATH=${FSL_FIXDIR}:${PATH}
+#export FSL_FIXDIR PATH
+#echo "FSL_FIXDIR        $FSL_FIXDIR"
 
 # Condor Setup
-	CONDORDIR=/Applications/condor-8.3.2
-	source ${CONDORDIR}/condor.sh
-	echo "CONDORDIR         $CONDORDIR"
-	export FSLPARALLEL=condor
+#CONDORDIR=/Applications/condor-8.3.2
+#source ${CONDORDIR}/condor.sh
+#echo "CONDORDIR         $CONDORDIR"
+#export FSLPARALLEL=condor
+
+# Shortcuts
+alias ll='ls -lhtr'
+alias l.='ls -d .*'
+alias h=history
+alias grep='grep --color'
+alias mkdir='mkdir -pv'
+alias diff='colordiff'
+alias path='echo -e ${PATH//:/\\n}'
+#alias wakeupnas01='/usr/bin/wakeonlan 00:11:32:11:15:FC'
+alias cpProgress="rsync --progress -ravz"
 
 # MATLAB complier env settings
-	MATLABCompilerPath=/Applications/MATLAB/MATLAB_Compiler_Runtime/v717
-	DYLD_LIBRARY_PATH=${MATLABCompilerPath}/runtime/maci64:${MATLABCompilerPath}/sys/os/maci64:${MATLABCompilerPath}/bin/maci64:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries
-	XAPPLRESDIR=${MATLABCompilerPath}/X11/app-defaults
+#DYLD_LIBRARY_PATH=/Applications/MATLAB/MATLAB_Compiler_Runtime/v717/runtime/maci64:/Applications/MATLAB/MATLAB_Compiler_Runtime/v717/sys/os/maci64:/Applications/MATLAB/MATLAB_Compiler_Runtime/v717/bin/maci64:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries
+#XAPPLRESDIR=/Applications/MATLAB/MATLAB_Compiler_Runtime/v717/X11/app-defaults
 
-# Git Settings
+## Git Settings
 	GITDIR=/usr/local/git/bin
 	PATH=${GITDIR}:${PATH}
 
@@ -58,21 +67,13 @@
 	# '\W' adds the name of the current directory
 	export PS1="$purple\u$green\$(__git_ps1)$blue \W $ $reset"
 
-# Alex's Toolbox Settings
-	export ALEXTOOLBOX=/Applications/toolbox
-	export PATH=${PATH}:${ALEXTOOLBOX}
-
-export PATH=/usr/local/bin:$PATH
-
-# Shell Settings and aliases
-	export CLICOLOR=1
-	# bash completion settings
+## bash completion settings
   if [ -f $(brew --prefix)/etc/bash_completion ]; then
     . $(brew --prefix)/etc/bash_completion
   fi
 
-
-# Shortcuts
-	alias grep='grep --color'
-	alias ll="ls -lhtr"
-	alias h="history"
+# My Settings
+export CLICOLOR=1
+export ALEXTOOLBOX=/Applications/toolbox
+export PATH=${PATH}:${ALEXTOOLBOX}
+export PATH=/usr/local/sbin:/usr/local/bin:$PATH
