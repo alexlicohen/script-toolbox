@@ -35,7 +35,7 @@ show_usage() {
     echo "   								 corticallayer_0.25  (if you made one...)"
     echo "   								 subcortlayer_mm_1.5 (if you made one...)"
     echo "   [--path=/blah/blah/blah]  if not specified, assumes pwd"
-    echo "   [--onefile=name_of_output_metric]  specify if you would like an combined ASCII file output"
+    echo "   [--onefile=yes]  specify if you would like an combined ASCII file output"
     exit 1
 }
 
@@ -80,7 +80,7 @@ HCPFolder="$StudyFolder"/"$Subject"/hcp
 
 # The HCP code uses fslreorient2std at the beginning... I assume we'll need to apply that rotation too? (otherwise just skip it)
 #fslreorient2std "$T2wImage" "$HCPFolder"/"$T2shortname".nii.gz
-cp fslreorient2std "$T2wImage" "$HCPFolder"/"$T2shortname".nii.gz
+cp "$T2wImage" "$HCPFolder"/"$T2shortname".nii.gz
 
 T2wImage="$HCPFolder"/"$T2shortname".nii.gz
 echo $T2wImage
