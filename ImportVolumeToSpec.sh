@@ -180,7 +180,7 @@ for Hemisphere in L R ; do
 		fi
 		wb_command -gifti-convert ASCII "$HCPFolder"/"$Subject"."$Hemisphere".aparc."$SurfaceSet".label.gii "$HCPFolder"/results/"$SurfaceSet"/"$Subject"."$Hemisphere".aparc."$SurfaceSet".label.gii
 		wb_command -gifti-convert ASCII "$HCPFolder"/"$Subject"."$Hemisphere".thickness."$SurfaceSet".shape.gii "$HCPFolder"/results/"$SurfaceSet"/"$Subject"."$Hemisphere".thickness."$SurfaceSet".shape.gii
-		mv "$HCPFolder"/"$Subject"."$Hemisphere"*"$T2shortname"."$SurfaceSet"* "$HCPFolder"/results/"$SurfaceSet"
+		cp "$HCPFolder"/"$Subject"."$Hemisphere"*"$T2shortname"."$SurfaceSet"* "$HCPFolder"/results/"$SurfaceSet"
 	done	
 	for SurfaceSet in "$LowResMesh"k_fs_LR ; do
 		if [ ! -e "$HCPFolder"/results/"$SurfaceSet" ] ; then
@@ -188,7 +188,7 @@ for Hemisphere in L R ; do
 		fi
 		wb_command -gifti-convert ASCII "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".aparc."$SurfaceSet".label.gii "$HCPFolder"/results/"$SurfaceSet"/"$Subject"."$Hemisphere".aparc."$SurfaceSet".label.gii
 		wb_command -gifti-convert ASCII "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".thickness."$SurfaceSet".shape.gii "$HCPFolder"/results/"$SurfaceSet"/"$Subject"."$Hemisphere".thickness."$SurfaceSet".shape.gii
-		mv "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"*"$T2shortname"."$SurfaceSet"* "$HCPFolder"/results/"$SurfaceSet"
+		cp "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"*"$T2shortname"."$SurfaceSet"* "$HCPFolder"/results/"$SurfaceSet"
 	done
 done
 
