@@ -160,7 +160,37 @@ done
 	done
 fi
 
+# Convert labels to ASCII and make a copy in a results subdir, along with all the results files made above
+if [ ! -e "$HCPFolder"/results ] ; then
+  mkdir -p "$HCPFolder"/results
+fi
 
+for Hemisphere in L R ; do
+	# Set a bunch of different ways of saying left and right
+	if [ $Hemisphere = "L" ] ; then
+		hemisphere="l"
+		Structure="CORTEX_LEFT"
+	elif [ $Hemisphere = "R" ] ; then
+		hemisphere="r"
+		Structure="CORTEX_RIGHT"
+	fi
+	for SurfaceSet in native "$HighResMesh"k_fs_LR ; do
+		if [ ! -e "$HCPFolder"/results/"$SurfaceSet" ] ; then
+  			mkdir -p "$HCPFolder"/results/"$SurfaceSet"
+		fi
+		wb_command -gifti-convert ASCII "$HCPFolder"/"$Subject"."$Hemisphere".aparc."$SurfaceSet".label.gii "$HCPFolder"/results/"$SurfaceSet"/"$Subject"."$Hemisphere".aparc."$SurfaceSet".label.gii
+		wb_command -gifti-convert ASCII "$HCPFolder"/"$Subject"."$Hemisphere".thickness."$SurfaceSet".shape.gii "$HCPFolder"/results/"$SurfaceSet"/"$Subject"."$Hemisphere".thickness."$SurfaceSet".shape.gii
+		mv "$HCPFolder"/"$Subject"."$Hemisphere"*"$T2shortname"."$SurfaceSet"* "$HCPFolder"/results/"$SurfaceSet"
+	done	
+	for SurfaceSet in "$LowResMesh"k_fs_LR ; do
+		if [ ! -e "$HCPFolder"/results/"$SurfaceSet" ] ; then
+  			mkdir -p "$HCPFolder"/results/"$SurfaceSet"
+		fi
+		wb_command -gifti-convert ASCII "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".aparc."$SurfaceSet".label.gii "$HCPFolder"/results/"$SurfaceSet"/"$Subject"."$Hemisphere".aparc."$SurfaceSet".label.gii
+		wb_command -gifti-convert ASCII "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".thickness."$SurfaceSet".shape.gii "$HCPFolder"/results/"$SurfaceSet"/"$Subject"."$Hemisphere".thickness."$SurfaceSet".shape.gii
+		mv "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"*"$T2shortname"."$SurfaceSet"* "$HCPFolder"/results/"$SurfaceSet"
+	done
+done
 
 
 
