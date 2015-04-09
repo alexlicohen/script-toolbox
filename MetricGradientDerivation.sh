@@ -1,0 +1,4 @@
+  wb_command -cifti-create-dense-scalar fc01.T2w.32k_fs_LR.onefile.dscalar.nii -left-metric fc01.L.T2w.32k_fs_LR.onefile.func.gii -right-metric fc01.R.T2w.32k_fs_LR.onefile.func.gii
+  wb_command -cifti-correlation fc01.T2w.32k_fs_LR.onefile.dscalar.nii fc01.T2w.32k_fs_LR.onefile_corr.dscalar.nii -mem-limit 14
+  wb_command -cifti-gradient fc01.T2w.32k_fs_LR.onefile_corr.dscalar.nii COLUMN fc01.T2w.32k_fs_LR.onefile_corr_gradient.dscalar.nii -left-surface fc01.L.midthickness.32k_fs_LR.surf.gii -right-surface fc01.R.midthickness.32k_fs_LR.surf.gii
+  wb_command -cifti-reduce fc01.T2w.32k_fs_LR.onefile_corr_gradient.dscalar.nii MEAN fc01.T2w.32k_fs_LR.onefile_corr_gradient_avg.dscalar.nii
