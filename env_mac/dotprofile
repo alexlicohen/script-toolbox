@@ -1,52 +1,57 @@
+
 # FSL Setup
-FSLDIR=/usr/local/fsl
-PATH=${FSLDIR}/bin:${PATH}
-export FSLDIR PATH
-source ${FSLDIR}/etc/fslconf/fsl.sh
+	FSLDIR=/usr/local/fsl
+	PATH=${FSLDIR}/bin:${PATH}
+	export FSLDIR PATH
+	source ${FSLDIR}/etc/fslconf/fsl.sh
 
 # FREESURFER Setup
-export FREESURFER_HOME=/Applications/freesurfer
-source $FREESURFER_HOME/SetUpFreeSurfer.sh
+	export FREESURFER_HOME=/Applications/freesurfer
+	source $FREESURFER_HOME/SetUpFreeSurfer.sh
 
 # HCP Pipelines Setup
-export HCPPIPEDIR=/Applications/Pipelines
-export PATH=$PATH:$HCPPIPEDIR
-echo "HCPPIPEDIR        $HCPPIPEDIR"
-source ~/SetUpHCPPipelines_Mac.sh
+	export HCPPIPEDIR=/Applications/Pipelines
+	export PATH=$PATH:$HCPPIPEDIR
+	echo "HCPPIPEDIR        $HCPPIPEDIR"
+	source ~/SetUpHCPPipeline_mac.sh
 
 # WB_bin Setup
-export HCBDIR=/Applications/workbench/bin_macosx64
-export PATH=${PATH}:${HCBDIR}
-echo "HCBDIR            $HCBDIR"
+	export HCBDIR=/Applications/workbench/bin_macosx64
+	export PATH=${PATH}:${HCBDIR}
+	echo "HCBDIR            $HCBDIR"
 
 # FIX Setup
-#FSL_FIXDIR=/usr/local/fix
-#PATH=${FSL_FIXDIR}:${PATH}
-#export FSL_FIXDIR PATH
-#echo "FSL_FIXDIR        $FSL_FIXDIR"
+	FSL_FIXDIR=/usr/local/fix
+	PATH=${FSL_FIXDIR}:${PATH}
+	export FSL_FIXDIR PATH
+	echo "FSL_FIXDIR        $FSL_FIXDIR"
 
 # Condor Setup
-#CONDORDIR=/Applications/condor-8.3.2
-#source ${CONDORDIR}/condor.sh
-#echo "CONDORDIR         $CONDORDIR"
-#export FSLPARALLEL=condor
+	CONDORDIR=/Applications/condor-8.3.2
+	source ${CONDORDIR}/condor.sh
+	echo "CONDORDIR         $CONDORDIR"
+	export FSLPARALLEL=condor
 
 # Shortcuts
-alias ll='ls -lhtr'
-alias l.='ls -d .*'
-alias h=history
-alias grep='grep --color'
-alias mkdir='mkdir -pv'
-alias diff='colordiff'
-alias path='echo -e ${PATH//:/\\n}'
-#alias wakeupnas01='/usr/bin/wakeonlan 00:11:32:11:15:FC'
-alias cpProgress="rsync --progress -ravz"
+	alias grep='grep --color'
+	alias ll="ls -lhtr"
+	alias l.='ls -d .*'
+	alias h="history"
+	alias mkdir='mkdir -pv'
+	alias diff='colordiff'
+	alias path='echo -e ${PATH//:/\\n}'
+	#alias wakeupnas01='/usr/bin/wakeonlan 00:11:32:11:15:FC'
+	alias cpProgress="rsync --progress -ravz"
+	alias cp-="rsync --progress -ravz"
+	alias topcpu='top -o cpu'
+	alias topmem='top -o rsize'
 
 # MATLAB complier env settings
-#DYLD_LIBRARY_PATH=/Applications/MATLAB/MATLAB_Compiler_Runtime/v717/runtime/maci64:/Applications/MATLAB/MATLAB_Compiler_Runtime/v717/sys/os/maci64:/Applications/MATLAB/MATLAB_Compiler_Runtime/v717/bin/maci64:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries
-#XAPPLRESDIR=/Applications/MATLAB/MATLAB_Compiler_Runtime/v717/X11/app-defaults
+	MATLABCompilerPath=/Applications/MATLAB/MATLAB_Compiler_Runtime/v717
+	DYLD_LIBRARY_PATH=${MATLABCompilerPath}/runtime/maci64:${MATLABCompilerPath}/sys/os/maci64:${MATLABCompilerPath}/bin/maci64:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries
+	XAPPLRESDIR=${MATLABCompilerPath}/X11/app-defaults
 
-## Git Settings
+# Git Settings
 	GITDIR=/usr/local/git/bin
 	PATH=${GITDIR}:${PATH}
 
@@ -62,10 +67,11 @@ alias cpProgress="rsync --progress -ravz"
 	# Change command prompt
 	source ~/git-prompt.sh
 	export GIT_PS1_SHOWDIRTYSTATE=1
+	export GIT_PS1_SHOWUPSTREAM="auto"
 	# '\u' adds the name of the current user to the prompt
 	# '\$(__git_ps1)' adds git-related stuff
 	# '\W' adds the name of the current directory
-	export PS1="$purple\u$green\$(__git_ps1)$blue \W $ $reset"
+	export PS1="$purple\u@\h$green\$(__git_ps1)$blue \W $ $reset"
 
 ## bash completion settings
   if [ -f $(brew --prefix)/etc/bash_completion ]; then

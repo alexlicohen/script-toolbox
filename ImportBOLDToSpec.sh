@@ -87,4 +87,7 @@ applywarp --ref="$fsAnatTarget" --in="$VolumefMRI" --premat=reg/example_func2hig
 fslroi "$fMRI_in_fsAnat" "$fMRI_in_fsAnat"_SBRef 0 1
 
 # Sample Volume to Surface using Ribbon Methods from HCP scripts
-$HCPPIPEDIR/fMRISurface/scripts/RibbonVolumeToSurfaceMapping.sh "$HCPFolder"/temp "$fMRI_in_fsAnat" fc01 "$HCPFolder"/fsaverage_LR32k 32 "$HCPFolder" FS
+mkdir "$HCPFolder"/ribbon
+RibbonVolumeToSurfaceMapping_ac.sh "$HCPFolder"/ribbon "$fMRI_in_fsAnat" "$Subject" "$HCPFolder"/fsaverage_LR"$LowResMesh"k "$LowResMesh" "$HCPFolder" FS
+
+
