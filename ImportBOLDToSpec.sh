@@ -27,6 +27,7 @@ show_usage() {
     echo "  Inputs:"
     echo "    --subject=fc_12345"
     echo "    --inputvolume=/absolute/path/to/BOLD_timecourse.nii.gz"
+    echo "    --transform=/absolute/path/to/BOLD_to_HCPspace.mat"
     echo "   [--inputname=REST10min]  will use REST unless you want something else"
     echo "   [--path=/absolute/path/to/study/folder]  if not specified, assumes pwd"
     echo "   [--res=3]  will use 2, i.e., 2mm^3 voxels unless you want something else"
@@ -56,6 +57,7 @@ log_Msg "Parsing Command Line Options"
 StudyFolder=`opts_GetOpt1 "--path" $@`
 Subject=`opts_GetOpt1 "--subject" $@`
 VolumefMRI=`opts_GetOpt1 "--inputvolume" $@`
+transformMatrix=`opts_GetOpt1 "--transform" $@`
 fMRIshortname=`opts_GetOpt1 "--inputname" $@`
 fMRIresolution=`opts_GetOpt1 "--res" $@`
 
@@ -76,12 +78,12 @@ HCPFolder="$StudyFolder"/"$Subject"/hcp
 # Note: the standard HCP CIFTI greyordinates have a ~2mm spacing on the cortex
 fMRIisospace="$fMRIresolution""$fMRIresolution""$fMRIresolution"
 fsAnatTarget="$HCPFolder"/T1_"$fMRIisospace"
-mri_convert -vs "$fMRIresolution" "$fMRIresolution" "$fMRIresolution" "$HCPFolder"/T1.nii.gz $fsAnatTarget
+mri_convert -vs "$fMRIresolution" "$fMRIresolution" "$fMRIresolution" "$HCPFolder"/T1.nii.gz "$fsAnatTarget".nii.gz
 
 fMRI_in_fsAnat="$HCPFolder"/"$Subject""$fMRIshortname"_in_fsAnat"$fMRIisospace"
 
 # Apply transform to convert the cleaned BOLD data to fsAnat space
-applywarp --ref="$fsAnatTarget" --in="$VolumefMRI" --premat=reg/example_func2highres.mat --out="$fMRI_in_fsAnat" --interp=spline
+applywarp --ref="$fsAnatTarget" --in="$VolumefMRI" --premat="$transformMatrix" --out="$fMRI_in_fsAnat" --interp=spline
 
 # Create Single frame image to use for targeting within HCP scripts
 fslroi "$fMRI_in_fsAnat" "$fMRI_in_fsAnat"_SBRef 0 1
