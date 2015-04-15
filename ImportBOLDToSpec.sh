@@ -80,7 +80,7 @@ fMRIisospace="$fMRIresolution""$fMRIresolution""$fMRIresolution"
 fsAnatTarget="$HCPFolder"/T1_"$fMRIisospace"
 mri_convert -vs "$fMRIresolution" "$fMRIresolution" "$fMRIresolution" "$HCPFolder"/T1.nii.gz "$fsAnatTarget".nii.gz
 
-fMRI_in_fsAnat="$HCPFolder"/"$Subject""$fMRIshortname"_in_fsAnat"$fMRIisospace"
+fMRI_in_fsAnat="$HCPFolder"/"$Subject"_"$fMRIshortname"_in_fsAnat_"$fMRIisospace"
 
 # Apply transform to convert the cleaned BOLD data to fsAnat space
 applywarp --ref="$fsAnatTarget" --in="$VolumefMRI" --premat="$transformMatrix" --out="$fMRI_in_fsAnat" --interp=spline
@@ -91,5 +91,24 @@ fslroi "$fMRI_in_fsAnat" "$fMRI_in_fsAnat"_SBRef 0 1
 # Sample Volume to Surface using Ribbon Methods from HCP scripts
 mkdir "$HCPFolder"/ribbon
 RibbonVolumeToSurfaceMapping_ac.sh "$HCPFolder"/ribbon "$fMRI_in_fsAnat" "$Subject" "$HCPFolder"/fsaverage_LR"$LowResMesh"k "$LowResMesh" "$HCPFolder" FS
+
+# Surface Smoothing adapted from HCP scripts
+SurfaceSmoothing_ac.sh "$ResultsFolder"/"$NameOffMRI" "$Subject" "$AtlasSpaceFolder"/"$DownSampleFolder" "$LowResMesh" "$SmoothingFWHM"
+
+	NameOffMRI="$1"
+	Subject="$2"
+	DownSampleFolder="$3"
+	LowResMesh="$4"
+	SmoothingFWHM="$5"
+
+	Sigma=`echo "$SmoothingFWHM / ( 2 * ( sqrt ( 2 * l ( 2 ) ) ) )" | bc -l`
+
+
+	for Hemisphere in L R ; do
+	  ${CARET7DIR}/wb_command -metric-smoothing "$DownSampleFolder"/"$Subject"."$Hemisphere".midthickness."$LowResMesh"k_fs_LR.surf.gii "$NameOffMRI"."$Hemisphere".atlasroi."$LowResMesh"k_fs_LR.func.gii "$Sigma" "$NameOffMRI"_s"$SmoothingFWHM".atlasroi."$Hemisphere"."$LowResMesh"k_fs_LR.func.gii -roi "$DownSampleFolder"/"$Subject"."$Hemisphere".atlasroi."$LowResMesh"k_fs_LR.shape.gii
+	done
+
+
+
 
 
