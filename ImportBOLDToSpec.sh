@@ -27,7 +27,8 @@ show_usage() {
     echo "  Inputs:"
     echo "    --subject=fc_12345"
     echo "    --inputvolume=/absolute/path/to/BOLD_timecourse.nii.gz"
-    echo "    --transform=/absolute/path/to/BOLD_to_HCPspace.mat"
+    echo "    --BOLDtransform=/absolute/path/to/BOLD_to_HCPspace.mat"
+    echo "    --MNItransform=/absolute/path/to/fsAnant_to_MNI   (.nii.gz)"
     echo "   [--inputname=REST10min]  will use REST unless you want something else"
     echo "   [--path=/absolute/path/to/study/folder]  if not specified, assumes pwd"
     echo "   [--res=3]  will use 2, i.e., 2mm^3 voxels unless you want something else"
@@ -57,8 +58,8 @@ log_Msg "Parsing Command Line Options"
 StudyFolder=`opts_GetOpt1 "--path" $@`
 Subject=`opts_GetOpt1 "--subject" $@`
 VolumefMRI=`opts_GetOpt1 "--inputvolume" $@`
-BOLD2strucTransformMatrix=`opts_GetOpt1 "--transform" $@`
-MNI2strucTransformMatrix=`opts_GetOpt1 "--transform" $@`
+BOLD2strucTransformMatrix=`opts_GetOpt1 "--BOLDtransform" $@`
+struc2MNITransformMatrix=`opts_GetOpt1 "--MNItransform" $@`
 fMRIshortname=`opts_GetOpt1 "--inputname" $@`
 fMRIresolution=`opts_GetOpt1 "--res" $@`
 
@@ -115,16 +116,16 @@ done
 # Subcortical Processing adapted from HCP scripts
 unset POSIXLY_CORRECT # unsure what part of the script is not POSIX compliant, but the HCP scripts have this here... (I typically don't set this anyway...)
 log_Msg "Performing Subcortical Processing adapted from HCP scripts, and volume parcel (wmparc) resampling after applying warp and doing a volume label import, all downsampled to subject FSAnat space"
+
 cp "${HCPPIPEDIR_Templates}/91282_Greyordinates/"Atlas_ROIs."$GrayordinatesResolution".nii.gz "$HCPFolder"/Atlas_ROIs.MNI."$GrayordinatesResolution".nii.gz
+invwarp --ref="$HCPFolder"/T1.nii.gz --warp="$struc2MNITransformMatrix" --out="$HCPFolder"/MNI_to_fsAnat_warp
+#applywarp --interp=nn -i "$HCPFolder"/Atlas_ROIs.MNI."$GrayordinatesResolution".nii.gz -r "$HCPFolder"/T1.nii.gz -o "$HCPFolder"/Atlas_ROIs.fsAnat."$GrayordinatesResolution".nii.gz -w "$HCPFolder"/MNI_to_fsAnat_warp
+wb_command -volume-warpfield-resample "$HCPFolder"/Atlas_ROIs.MNI.2.nii.gz "$HCPFolder"/MNI_to_fsAnat_warp.nii.gz "$HCPFolder"/T1.nii.gz ENCLOSING_VOXEL "$HCPFolder"/Atlas_ROIs.fsAnat.2.nii.gz -fnirt /projects/mayoresearch/fc01/fMRI.feat/reg/standard.nii.gz
 
-#invwarp --ref=my_struct --warp=warps_into_MNI_space --out=warps_into_my_struct_space
-
-#applywarp --ref=my_struct --in=ACC_left --warp=warps_into_my_struct_space --out=ACC_left_in_my_struct_space --interp=nn
-
-applywarp --interp=nn -i "$HCPFolder"/Atlas_ROIs.MNI."$GrayordinatesResolution".nii.gz -r "$fMRI_in_fsAnat".nii.gz -o "$HCPFolder"/Atlas_ROIs."$GrayordinatesResolution".nii.gz --premat
 applywarp --interp=nn -i "$HCPFolder"/wmparc.nii.gz -r "$fMRI_in_fsAnat".nii.gz -o "$HCPFolder"/wmparc."$fMRIisospace".nii.gz
 wb_command -volume-label-import "$HCPFolder"/wmparc."$fMRIisospace".nii.gz ${HCPPIPEDIR_Config}/FreeSurferSubcorticalLabelTableLut.txt "$HCPFolder"/ROIs."$fMRIisospace".nii.gz -discard-others
-# wb_command -volume-parcel-resampling-generic "$fMRI_in_fsAnat".nii.gz "$HCPFolder"/ROIs."$fMRIisospace".nii.gz "$HCPFolder"/Atlas_ROIs."$fMRIisospace".nii.gz $Sigma "$fMRI_in_fsAnat"_AtlasSubcortical_s"$SmoothingFWHM".nii.gz -fix-zeros
+
+wb_command -volume-parcel-resampling-generic "$fMRI_in_fsAnat".nii.gz "$HCPFolder"/ROIs."$fMRIisospace".nii.gz "$HCPFolder"/Atlas_ROIs.fsAnat."$GrayordinatesResolution".nii.gz $Sigma "$fMRI_in_fsAnat"_AtlasSubcortical_s"$SmoothingFWHM".nii.gz -fix-zeros
 
 echo "${script_name}: END"
 
