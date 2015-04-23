@@ -44,6 +44,8 @@ defaultopt() {
 # --------------------------------------------------------------------------------
 log_SetToolName "ImportBOLDToSpec.sh"
 
+log_Msg "Script START"
+
 ################################################## OPTION PARSING #####################################################
 
 opts_ShowVersionIfRequested $@
@@ -72,21 +74,22 @@ fMRIresolution=`defaultopt $fMRIresolution "2"`
 # hardcoded parameters
 fMRIisospace="$fMRIresolution""$fMRIresolution""$fMRIresolution"
 LowResMesh="32"
-NeighborhoodSmoothing="5"
 SmoothingFWHM=2
-Factor="0.5"
 HCPFolder="$StudyFolder"/"$Subject"/hcp
 GrayordinatesResolution="2" # To match Standard HCP scripts
 BrainOrdinatesResolution=$GrayordinatesResolution # For subcortical processing
+MemLimit=12 # in GB, set to a couple GB less than max to not slow down the computer too much...
 
 
 # Create a T1 reference downsampled to 222, 333, or something else
-# Note: the standard HCP CIFTI greyordinates have a ~2mm spacing on the cortex
+# Note: the standard HCP CIFTI greyordinates have a ~2mm spacing on the cortex and for subcortical ROIs, so a 2mm version is always created...
 log_Msg "Creating a T1 reference downsampled to ${fMRIisospace}"
 fsAnatTarget="$HCPFolder"/T1_"$fMRIisospace"
 mri_convert -vs "$fMRIresolution" "$fMRIresolution" "$fMRIresolution" "$HCPFolder"/T1.nii.gz "$fsAnatTarget".nii.gz
 fMRI_in_fsAnat="$HCPFolder"/"$Subject"_"$fMRIshortname"_in_fsAnat_"$fMRIisospace"
-
+if [ 1 -ne `echo "$fMRIresolution" == 2 | bc -l` ] ; then
+	mri_convert -vs 2 2 2 "$HCPFolder"/T1.nii.gz "$HCPFolder"/T1_222.nii.gz
+fi
 
 # Apply transform to convert the BOLD data to fsAnat space
 log_Msg "Applying FSL transform to convert the BOLD data to fsAnat space in ${fMRIisospace} resolution"
@@ -119,15 +122,31 @@ log_Msg "Performing Subcortical Processing adapted from HCP scripts, and volume 
 
 cp "${HCPPIPEDIR_Templates}/91282_Greyordinates/"Atlas_ROIs."$GrayordinatesResolution".nii.gz "$HCPFolder"/Atlas_ROIs.MNI."$GrayordinatesResolution".nii.gz
 invwarp --ref="$HCPFolder"/T1.nii.gz --warp="$struc2MNITransformMatrix" --out="$HCPFolder"/MNI_to_fsAnat_warp
-#applywarp --interp=nn -i "$HCPFolder"/Atlas_ROIs.MNI."$GrayordinatesResolution".nii.gz -r "$HCPFolder"/T1.nii.gz -o "$HCPFolder"/Atlas_ROIs.fsAnat."$GrayordinatesResolution".nii.gz -w "$HCPFolder"/MNI_to_fsAnat_warp
-wb_command -volume-warpfield-resample "$HCPFolder"/Atlas_ROIs.MNI.2.nii.gz "$HCPFolder"/MNI_to_fsAnat_warp.nii.gz "$HCPFolder"/T1.nii.gz ENCLOSING_VOXEL "$HCPFolder"/Atlas_ROIs.fsAnat.2.nii.gz -fnirt /projects/mayoresearch/fc01/fMRI.feat/reg/standard.nii.gz
+wb_command -volume-warpfield-resample "$HCPFolder"/Atlas_ROIs.MNI."$GrayordinatesResolution".nii.gz "$HCPFolder"/MNI_to_fsAnat_warp.nii.gz "$HCPFolder"/T1_"$fMRIisospace".nii.gz ENCLOSING_VOXEL "$HCPFolder"/Atlas_ROIs.fsAnat."$GrayordinatesResolution"."$fMRIisospace".nii.gz -fnirt /projects/mayoresearch/fc01/fMRI.feat/reg/standard.nii.gz
 
 applywarp --interp=nn -i "$HCPFolder"/wmparc.nii.gz -r "$fMRI_in_fsAnat".nii.gz -o "$HCPFolder"/wmparc."$fMRIisospace".nii.gz
 wb_command -volume-label-import "$HCPFolder"/wmparc."$fMRIisospace".nii.gz ${HCPPIPEDIR_Config}/FreeSurferSubcorticalLabelTableLut.txt "$HCPFolder"/ROIs."$fMRIisospace".nii.gz -discard-others
 
-wb_command -volume-parcel-resampling-generic "$fMRI_in_fsAnat".nii.gz "$HCPFolder"/ROIs."$fMRIisospace".nii.gz "$HCPFolder"/Atlas_ROIs.fsAnat."$GrayordinatesResolution".nii.gz $Sigma "$fMRI_in_fsAnat"_AtlasSubcortical_s"$SmoothingFWHM".nii.gz -fix-zeros
+wb_command -volume-parcel-resampling-generic "$fMRI_in_fsAnat".nii.gz "$HCPFolder"/ROIs."$fMRIisospace".nii.gz "$HCPFolder"/Atlas_ROIs.fsAnat."$GrayordinatesResolution"."$fMRIisospace".nii.gz $Sigma "$fMRI_in_fsAnat"_AtlasSubcortical_s"$SmoothingFWHM".nii.gz -fix-zeros
 
-echo "${script_name}: END"
+
+# Generation of Dense Timeseries
+log_Msg "Generating Dense Timeseries adapted from HCP Scripts"
+TR_vol=`fslval "$fMRI_in_fsAnat"_AtlasSubcortical_s"$SmoothingFWHM".nii.gz pixdim4 | cut -d " " -f 1`
+
+wb_command -cifti-create-dense-timeseries "$fMRI_in_fsAnat"_AtlasSubcortical_in_Gray_"$fMRIisospace".dtseries.nii -volume "$fMRI_in_fsAnat"_AtlasSubcortical_s"$SmoothingFWHM".nii.gz "$HCPFolder"/Atlas_ROIs.fsAnat."$GrayordinatesResolution"."$fMRIisospace".nii.gz -left-metric "$fMRI_in_fsAnat"_s"$SmoothingFWHM".roi.L."$LowResMesh"k_fs_LR.func.gii -roi-left "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject".L.roi."$LowResMesh"k_fs_LR.shape.gii -right-metric "$fMRI_in_fsAnat"_s"$SmoothingFWHM".roi.R."$LowResMesh"k_fs_LR.func.gii -roi-right "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject".R.roi."$LowResMesh"k_fs_LR.shape.gii -timestep "$TR_vol"
+
+
+# Generation of Dense Connectome (set of correlation maps)
+wb_command -cifti-correlation "$fMRI_in_fsAnat"_AtlasSubcortical_in_Gray_"$fMRIisospace".dtseries.nii "$fMRI_in_fsAnat"_AtlasSubcortical_in_Gray_"$fMRIisospace".dconn.nii -mem-limit "$MemLimit"
+
+SurfacePresmooth=1 # as sigma
+SurfaceExclude=4 # in mm
+
+# Gradient Calculation and Averaging
+wb_command -cifti-correlation-gradient "$fMRI_in_fsAnat"_AtlasSubcortical_in_Gray_"$fMRIisospace".dconn.nii "$fMRI_in_fsAnat"_AtlasSubcortical_in_Gray_"$fMRIisospace"_corrgrad_s"$SurfacePresmooth"_se"$SurfaceExclude".dscalar.nii -left-surface "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject".L.midthickness."$LowResMesh"k_fs_LR.surf.gii -right-surface "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject".R.midthickness."$LowResMesh"k_fs_LR.surf.gii -mem-limit "$MemLimit" -surface-presmooth "$SurfacePresmooth" -surface-exclude "$SurfaceExclude"
+
+log_Msg "Script END"
 
 
 
