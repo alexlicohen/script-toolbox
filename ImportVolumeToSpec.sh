@@ -107,17 +107,24 @@ for Hemisphere in L R ; do
 
 		# sample the volume using each surface (alternatively could use the ribbon or myelin techniques, but for now, just use trilinear...)
 		${CARET7DIR}/wb_command -volume-to-surface-mapping "$T2wImage" "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$T2shortname".native.func.gii -trilinear
+		${CARET7DIR}/wb_command -metadata-string-replace "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$T2shortname".native.func.gii " trilinear" "$T2shortname".on."$Surface" "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$T2shortname".native.func.gii
 
-		${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject".native.wb.spec $Structure "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$T2shortname".native.func.gii
+		if [ -z "$Onefile" ] ; then
+			${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject".native.wb.spec $Structure "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$T2shortname".native.func.gii
+		fi
 
 		# resample data to the hires surface atlas mesh
 		${CARET7DIR}/wb_command -metric-resample "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$T2shortname".native.func.gii  "$HCPFolder"/"${Subject}.${Hemisphere}.sphere.reg.reg_LR.native.surf.gii" "$HCPFolder"/"$Subject"."$Hemisphere".sphere."$HighResMesh"k_fs_LR.surf.gii ADAP_BARY_AREA "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$T2shortname"."$HighResMesh"k_fs_LR.func.gii -area-surfs "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$HighResMesh"k_fs_LR.surf.gii
 
 		# add it to the spec files
-		${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject"."$HighResMesh"k_fs_LR.wb.spec $Structure "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$T2shortname"."$HighResMesh"k_fs_LR.func.gii
+		if [ -z "$Onefile" ] ; then
+			${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/"$Subject"."$HighResMesh"k_fs_LR.wb.spec $Structure "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$T2shortname"."$HighResMesh"k_fs_LR.func.gii
+		fi
 
 		${CARET7DIR}/wb_command -metric-resample "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface"."$T2shortname".native.func.gii "$HCPFolder"/"${Subject}.${Hemisphere}.sphere.reg.reg_LR.native.surf.gii" "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere".sphere."$LowResMesh"k_fs_LR.surf.gii ADAP_BARY_AREA "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$Surface"."$T2shortname"."$LowResMesh"k_fs_LR.func.gii -area-surfs "$HCPFolder"/"$Subject"."$Hemisphere"."$Surface".native.surf.gii "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$Surface"."$LowResMesh"k_fs_LR.surf.gii
-		${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec $Structure "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$Surface"."$T2shortname"."$LowResMesh"k_fs_LR.func.gii
+		if [ -z "$Onefile" ] ; then
+			${CARET7DIR}/wb_command -add-to-spec-file "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$LowResMesh"k_fs_LR.wb.spec $Structure "$HCPFolder"/fsaverage_LR"$LowResMesh"k/"$Subject"."$Hemisphere"."$Surface"."$T2shortname"."$LowResMesh"k_fs_LR.func.gii
+		fi
 	done
 done
 
