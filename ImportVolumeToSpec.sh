@@ -35,6 +35,7 @@ show_usage() {
     echo "   								 corticallayer_0.25  (if you made one...)"
     echo "   								 subcortlayer_mm_1.5 (if you made one...)"
     echo "   [--path=/blah/blah/blah]  if not specified, assumes pwd"
+    echo "   [--lowres=8]  8=7,842 nodes, 32=32,492 nodes. if not specified, assumes 32k"
     echo "   [--onefile=yes]  specify if you would like an combined ASCII file output"
     exit 1
 }
@@ -64,16 +65,17 @@ Subject=`opts_GetOpt1 "--subject" $@`
 Layers=`opts_GetOpt1 "--layers" $@`
 T2wImage=`opts_GetOpt1 "--inputvolume" $@` #T2w, DIR or other image already registered to T1 used as HCP Pipelines/Freesurfer input
 T2shortname=`opts_GetOpt1 "--inputname" $@` #what prefix/suffix to add to new files (if using T2 images, this could be T2w, etc...)
+LowResMesh=`opts_GetOpt1 "--lowres" $@`
 Onefile=`opts_GetOpt1 "--onefile" $@`
 
 #Initializing Variables with Default Values if not otherwise specified
 WD="`pwd`"
 StudyFolder=`defaultopt $StudyFolder $WD`
+LowResMesh=`defaultopt $LowResMesh "32"`
 Onefile=`defaultopt $Onefile ""`
 
 # hardcoded parameters
 HighResMesh="164"
-LowResMesh="32"
 
 HCPFolder="$StudyFolder"/"$Subject"/hcp
 
