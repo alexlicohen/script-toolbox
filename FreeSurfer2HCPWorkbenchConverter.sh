@@ -29,7 +29,12 @@ show_usage() {
     echo "   [--layers=0.33@0.66]      to make more cortical surfaces (0->1 ~ white->pial)"
     echo "   [--subcort=1.3@2]         to make subcortical surfaces (mm below white)"
     echo "   [--target=rawavg]         if not specified, assumes T1"
+    echo "   [--lowres=8]  8=8,412nodes, 32=32,492 nodes. Will always make 32k, specify if other resolutions desired"
     exit 1
+}
+
+defaultopt() {
+    echo $1
 }
 
 # --------------------------------------------------------------------------------
@@ -53,16 +58,15 @@ Subject=`opts_GetOpt1 "--subject" $@`
 Layers=`opts_GetOpt1 "--layers" $@`
 Subcort=`opts_GetOpt1 "--subcort" $@`
 Target=`opts_GetOpt1 "--target" $@`
+LowResMesh=`opts_GetOpt1 "--lowres" $@`
 
 #Initializing Variables with Default Values if not otherwise specified
-defaultopt() {
-    echo $1
-}
 WD=`pwd`
 StudyFolder=`defaultopt $StudyFolder $WD`
 Layers=`defaultopt $Layers ""`
 Subcort=`defaultopt $Subcort ""`
 Target=`defaultopt $Target T1`
+LowResMeshes=`echo $LowResMesh "32"`
 
 FreeSurferFolder="$StudyFolder"/"$Subject"
 SUBJECTS_DIR="$StudyFolder"
@@ -72,7 +76,6 @@ HCPFolder="$FreeSurferFolder"/hcp
 FreeSurferLabels="${HCPPIPEDIR_Config}/FreeSurferAllLut.txt"
 SurfaceAtlasDIR="${HCPPIPEDIR_Templates}/standard_mesh_atlases"
 HighResMesh="164"
-LowResMeshes="32"
 RegName="FS"
 GrayordinatesSpaceDIR="${HCPPIPEDIR_Templates}/91282_Greyordinates"
 
@@ -336,9 +339,9 @@ for Hemisphere in L R ; do
   done
 
   for LowResMesh in ${LowResMeshes} ; do
-	if [ ! -e "$HCPFolder"/fsaverage_LR"$LowResMesh"k ] ; then
-		mkdir -p "$HCPFolder"/fsaverage_LR"$LowResMesh"k
-	fi
+  	if [ ! -e "$HCPFolder"/fsaverage_LR"$LowResMesh"k ] ; then
+  		mkdir -p "$HCPFolder"/fsaverage_LR"$LowResMesh"k
+  	fi
     
     for Image in $Target ; do
       pushd  > /dev/null "$HCPFolder"/fsaverage_LR"$LowResMesh"k
