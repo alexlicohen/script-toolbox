@@ -51,9 +51,11 @@ applywarp --rel --interp=nn -i ${TemplateFolder}/Avgwmparc.nii.gz -r ${TemplateF
 
 wb_command -volume-label-import ${TemplateFolder}/Atlas_ROIs.${NewResolution}.nii.gz ${SubcorticalLabelTable} ${TemplateFolder}/Atlas_ROIs.${NewResolution}.nii.gz -discard-others -drop-unused-labels
 
+cp ${TemplateFolder}/Atlas_ROIs.${NewResolution}.nii.gz ${HCPPIPEDIR}/global/templates/91282_Greyordinates/Atlas_ROIs.${NewResolution}.nii.gz
 
 
 for Hemisphere in L R ; do
   wb_command -metric-resample ${TemplateFolder}/${Hemisphere}.atlasroi.${OriginalMesh}k_fs_LR.shape.gii ${TemplateFolder}/fsaverage.${Hemisphere}_LR.spherical_std.${OriginalMesh}k_fs_LR.surf.gii ${TemplateFolder}/${Hemisphere}.sphere.${NewMesh}k_fs_LR.surf.gii BARYCENTRIC ${TemplateFolder}/${Hemisphere}.atlasroi.${NewMesh}k_fs_LR.shape.gii -largest
   wb_command -surface-cut-resample ${TemplateFolder}/colin.cerebral.${Hemisphere}.flat.${OriginalMesh}k_fs_LR.surf.gii ${TemplateFolder}/fsaverage.${Hemisphere}_LR.spherical_std.${OriginalMesh}k_fs_LR.surf.gii ${TemplateFolder}/${Hemisphere}.sphere.${NewMesh}k_fs_LR.surf.gii ${TemplateFolder}/colin.cerebral.${Hemisphere}.flat.${NewMesh}k_fs_LR.surf.gii
+  cp ${TemplateFolder}/${Hemisphere}.atlasroi.${NewMesh}k_fs_LR.shape.gii ${HCPPIPEDIR}/global/templates/91282_Greyordinates/${Hemisphere}.atlasroi.${NewMesh}k_fs_LR.shape.gii
 done
