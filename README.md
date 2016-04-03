@@ -10,9 +10,13 @@ The goal of these scripts is to be able to use the Human Connectome Project's wb
 (e.g., no 1mm^3 T2 images, no fieldmaps for BOLD data, you don't want to use MNI152 atlasspace, etc...)
 
 This repo is actively changing, but the general order of operations is:
+
 1. Run Freesurfer's recon-all on your subject to generate surfaces
+
 2. (Optional: Run CreateNewTemplateSpace.sh to generate lower- or higher- resolution template meshes)
+
 3. Run FreeSurfer2HCPWorkbenchConverter.sh to create a ./hcp subdirectory that contains HCP-style surface and .spec files
+
 4. Run ImportVolumeToSpec.sh and ImportBOLDToSpec.sh with registered (and pre-processed) NIFTI files to generate HCP-style *.func.gii files
 
 (NOTE: ImportBOLDToSpec.sh actually goes ahead and makes both a dense connectome and a surface fc-Gradient map based on the BOLD data, assuming it is rs-fcMRI data...)
