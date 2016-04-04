@@ -1,0 +1,75 @@
+# This is designed for NeuroDebian_8.0.0 VMs
+# place this file in ~, and add "source ~/alexrc" to the end of ~/.bashrc (without quotes)
+
+if [ -z "$PS1" ]; then
+   return
+fi
+
+#set mysystem=`uname`
+
+#set path=($path )
+
+# Settings
+	export CLICOLOR=1
+	umask 002
+
+# FREESURFER Setup
+	export FREESURFER_HOME=/opt/freesurfer
+	source $FREESURFER_HOME/SetUpFreeSurfer.sh
+
+# FSL Setup
+	source /etc/fsl/fsl.sh
+
+# HCP Pipelines Setup
+	export HCPDIR=/opt/Pipelines
+	export HCPPIPEDIR=${HCPDIR}
+	source ~/SetUpHCPPipeline.sh &>/dev/null
+	export PATH=${PATH}:${HCPDIR}
+	echo "HCPDIR            $HCPDIR"
+
+# WB_bin Setup
+	export WBDIR=/usr/bin
+	export CARET7DIR=${WBDIR}
+	echo "WBDIR             $WBDIR"
+
+# Git Setup
+	# colors!
+	green="\[\033[0;32m\]"
+	blue="\[\033[0;34m\]"
+	purple="\[\033[0;35m\]"
+	reset="\[\033[0m\]"
+
+	# Change command prompt
+	source ~/git-prompt.sh
+	export GIT_PS1_SHOWDIRTYSTATE=1
+	export GIT_PS1_SHOWUPSTREAM="auto"
+	# '\u' adds the name of the current user to the prompt
+	# '\$(__git_ps1)' adds git-related stuff
+	# '\W' adds the name of the current directory
+	export PS1="$purple\u@\h$green\$(__git_ps1)$blue \W $ $reset"
+
+# Alex's toolbox Setup
+	export ALEXTOOLBOX=/opt/script-toolbox
+	export PATH=${ALEXTOOLBOX}:${PATH}
+	echo "ALEXTOOLBOX       $ALEXTOOLBOX"
+
+
+# Shortcuts
+	alias grep='grep --color'
+	alias ls='ls --color=auto'
+	alias ll="ls -lhtr"
+	alias l.='ls -d .*'
+	alias l='ls -l'
+	alias h="history"
+	alias mkdir='mkdir -pv'
+	alias path='echo -e ${PATH//:/\\n}'
+	alias cpProgress="rsync --progress -ravz"
+	alias cp-="rsync --progress -ravz"
+	alias subdir='export SUBJECTS_DIR=$PWD && echo " SUBJECTS_DIR is now set to: $SUBJECTS_DIR"'
+	alias editwm='freeview -v mri/brainmask.mgz mri/wm.mgz:colormap=heat:opacity=0.4 -f surf/lh.white:edgecolor=blue surf/lh.pial:edgecolor=red surf/rh.white:edgecolor=blue surf/rh.pial:edgecolor=red surf/rh.inflated:visible=0 surf/lh.inflated:visible=0'
+	alias editpial='freeview -v mri/T1.mgz mri/brainmask.mgz:colormap=heat:opacity=0.4 -f surf/lh.white:edgecolor=yellow surf/lh.pial:edgecolor=red surf/rh.white:edgecolor=yellow surf/rh.pial:edgecolor=red'
+	alias dicomdecompress='find . -printf "dcmdjpeg %p %p \n" |sh'
+	
+
+
+
