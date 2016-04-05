@@ -69,7 +69,4 @@ fi
 	alias editwm='freeview -v mri/brainmask.mgz mri/wm.mgz:colormap=heat:opacity=0.4 -f surf/lh.white:edgecolor=blue surf/lh.pial:edgecolor=red surf/rh.white:edgecolor=blue surf/rh.pial:edgecolor=red surf/rh.inflated:visible=0 surf/lh.inflated:visible=0'
 	alias editpial='freeview -v mri/T1.mgz mri/brainmask.mgz:colormap=heat:opacity=0.4 -f surf/lh.white:edgecolor=yellow surf/lh.pial:edgecolor=red surf/rh.white:edgecolor=yellow surf/rh.pial:edgecolor=red'
 	alias dicomdecompress='find . -printf "dcmdjpeg %p %p \n" |sh'
-	
-
-
 
