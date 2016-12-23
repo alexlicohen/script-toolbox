@@ -50,6 +50,10 @@ if opts_CheckForHelpRequest $@; then
     show_usage
 fi
 
+if [ $# -eq 0 ] ; then
+  show_usage
+fi
+
 log_Msg "Parsing Command Line Options"
 
 # Input Variables
